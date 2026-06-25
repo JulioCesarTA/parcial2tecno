@@ -76,15 +76,24 @@ El flujo del negocio es:
    - *(Si elegís **Crédito**, pedí **número de cuotas ≥ 2** — ver Variación A.)*
 4. **Cerrá sesión.**
 
-### Paso 5 — CLIENTE: paga con QR
+### Paso 5 — CLIENTE: registra su método de pago y paga con QR
 1. Entrá de nuevo como **`cliente@servicargo.bo`**.
-2. Andá a **Pagos** (`/pagos`). En **"Ventas por cobrar"** vas a ver tu venta.
-3. Tocá **Pagar** → el método queda fijo en **QR** (el cliente solo paga por QR).
-4. **Generar QR** → se muestra el **QR PagoFácil (simulado)**.
-5. Tocá **Simular confirmación** (equivale al callback de la pasarela).
+2. Andá a **Pagos** (`/pagos`).
+3. **Registra un método de pago** (panel **"Mis métodos de pago"**):
+   - **Tipo = QR** (el cliente solo puede pagar por QR), **Alias** (ej. *Mi QR personal*)
+     y, opcional, una **Referencia** (alias/cuenta — nunca datos sensibles).
+   - **Registrar método** → aparece en la lista. *(El seeder ya deja uno cargado.)*
+4. En **"Ventas por cobrar"** vas a ver tu venta. Tocá **Pagar**.
+5. En el modal, elegí tu **método registrado** en *"Método registrado"* (queda en **QR**).
+6. **Generar QR** → se muestra el **QR PagoFácil (simulado)**.
+7. Tocá **Simular confirmación** (equivale al callback de la pasarela).
    - ✅ El pago queda **`REGISTRADO`**, se **emite la factura** `FAC-<venta>-<pago>` y la
      venta pasa a **`PAGADA`**. 🎉
-6. Revisá la factura en **Facturas** (`/facturas`).
+8. Revisá la factura en **Facturas** (`/facturas`).
+
+> **Punto 10 (pagos electrónicos):** "Mis métodos de pago" cubre el **registro de métodos
+> de pago por usuario**; el pago QR/efectivo cubre los **pagos únicos**; y la venta a
+> **Crédito** cubre el **plan de pagos en cuotas** (Variación A).
 
 **Fin del flujo.**
 
@@ -93,7 +102,8 @@ El flujo del negocio es:
 ## Variación A — Pago a CRÉDITO (en cuotas)
 
 - En el **Paso 4**, el vendedor crea la venta como **Crédito** e indica **N.º de cuotas ≥ 2**.
-- En el **Paso 5**, el cliente en **Pagos** paga un **monto parcial** con QR:
+- En el **Paso 5**, el cliente en **Pagos** paga un **monto parcial** con su **método QR
+  registrado**:
   - Si querés, indicá el **N.º de cuota** en el modal.
   - Tras confirmar, la venta queda en **`PARCIAL`** (se emite factura por ese pago).
 - Repetí el pago QR hasta cubrir el **total**: cuando `total_pagado ≥ total_final`, la venta
@@ -131,6 +141,7 @@ El flujo del negocio es:
 | Generar encomienda (ventana 20 min) | Vendedor / Admin | `/cotizaciones` → Generar encomienda |
 | Mover estado del envío | Vendedor / Admin | `/encomiendas` → Gestionar |
 | Crear nota de venta (cobro) | Vendedor / Admin | `/ventas` → + Nueva nota de venta |
+| Registrar método de pago | Cliente / Vendedor / Admin | `/pagos` → Mis métodos de pago |
 | Pagar con QR | **Cliente** | `/pagos` |
 | Cobrar en efectivo | Vendedor / Admin | `/pagos` |
 | Ver facturas | Cliente / Vendedor / Admin | `/facturas` |
