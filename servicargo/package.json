@@ -1,0 +1,22 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite",
+        "watch": "vite build --watch",
+        "start": "concurrently -k -n VITE,LARAVEL -c blue,green \"vite build --watch\" \"php artisan serve --host=127.0.0.1 --port=8000\""
+    },
+    "devDependencies": {
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^3.1",
+        "vite": "^8.0.0"
+    },
+    "dependencies": {
+        "@inertiajs/vue3": "^3.4.0",
+        "@vitejs/plugin-vue": "^6.0.7",
+        "lucide-vue-next": "^1.0.0",
+        "vue": "^3.5.38"
+    }
+}
