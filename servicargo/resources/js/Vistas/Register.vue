@@ -4,6 +4,7 @@ import { Link, router } from '@inertiajs/vue3';
 import { Truck } from 'lucide-vue-next';
 import { api } from '../servicios/useApi';
 import { useToast } from '../servicios/useUI';
+import { withBase } from '../servicios/useBase';
 import ToastHost from '../Componentes/ToastHost.vue';
 
 const toast = useToast();
@@ -17,7 +18,7 @@ async function registrar() {
   try {
     await api('/auth/register', { method: 'POST', body: form.value });
     toast.exito('Cuenta creada. Ya puedes iniciar sesión.');
-    setTimeout(() => router.visit('/login'), 800);
+    setTimeout(() => router.visit(withBase('/login')), 800);
   } catch (e) {
     errores.value = e.errors || {};
     toast.error(e.message || 'No se pudo crear la cuenta');
@@ -69,7 +70,7 @@ async function registrar() {
         </button>
       </form>
       <p style="text-align:center; margin-top:16px; color:var(--color-texto-suave)">
-        ¿Ya tienes cuenta? <Link href="/login">Iniciar sesión</Link>
+        ¿Ya tienes cuenta? <Link :href="withBase('/login')">Iniciar sesión</Link>
       </p>
     </div>
     <ToastHost />

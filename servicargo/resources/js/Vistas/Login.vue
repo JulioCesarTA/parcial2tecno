@@ -4,6 +4,7 @@ import { Link, router } from '@inertiajs/vue3';
 import { Truck } from 'lucide-vue-next';
 import { useAuth } from '../servicios/useAuth';
 import { useToast } from '../servicios/useUI';
+import { withBase } from '../servicios/useBase';
 import ToastHost from '../Componentes/ToastHost.vue';
 
 const { login } = useAuth();
@@ -17,7 +18,7 @@ async function entrar() {
   try {
     await login(correo.value, contrasena.value);
     toast.exito('Bienvenido a Servicargo');
-    router.visit('/inicio');
+    router.visit(withBase('/inicio'));
   } catch (e) {
     toast.error(e.message || 'No se pudo iniciar sesión');
   } finally {
@@ -44,7 +45,7 @@ async function entrar() {
         </button>
       </form>
       <p style="text-align:center; margin-top:16px; color:var(--color-texto-suave)">
-        ¿No tienes cuenta? <Link href="/registro">Crear cuenta</Link>
+        ¿No tienes cuenta? <Link :href="withBase('/registro')">Crear cuenta</Link>
       </p>
       <p style="text-align:center; font-size:12px; color:var(--color-texto-suave)">
         Demo: admin@ / vendedor@ / cliente@servicargo.bo · contraseña <strong>password</strong>

@@ -7,11 +7,13 @@ use App\Http\Controllers\BuscarController;
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\CotizacionController;
 use App\Http\Controllers\EncomiendaController;
+use App\Http\Controllers\EstadisticaController;
 use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\MetodoPagoController;
 use App\Http\Controllers\PagoController;
 use App\Http\Controllers\PermisoController;
+use App\Http\Controllers\PreferenciaController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\UsuarioController;
@@ -35,6 +37,10 @@ Route::middleware(['jwt', 'bitacora'])->group(function () {
 
     // Búsqueda del negocio
     Route::get('/buscar', [BuscarController::class, 'buscar']);
+
+    // Preferencias de tema/accesibilidad (por usuario, requisito 5)
+    Route::get('/preferencias', [PreferenciaController::class, 'show']);
+    Route::put('/preferencias', [PreferenciaController::class, 'update']);
 
     // Usuarios (solo admin)
     Route::middleware('rol:admin')->group(function () {
@@ -114,7 +120,7 @@ Route::middleware(['jwt', 'bitacora'])->group(function () {
     // Pagos
     Route::get('/pagos', [PagoController::class, 'index']);
     Route::post('/pagos', [PagoController::class, 'registrar']);
-    Route::post('/pagos/{pago}/simular-confirmacion', [PagoController::class, 'simularConfirmacion']);
+    Route::get('/pagos/{pago}/estado-qr', [PagoController::class, 'estadoQr']);
 
     // Facturas
     Route::get('/facturas', [FacturaController::class, 'index']);
@@ -131,6 +137,9 @@ Route::middleware(['jwt', 'bitacora'])->group(function () {
     Route::middleware('rol:admin')->group(function () {
         Route::get('/reportes/inventario', [ReporteController::class, 'inventario']);
         Route::get('/reportes/acceso', [ReporteController::class, 'acceso']);
+
+        // Estadísticas del negocio (requisito 8)
+        Route::get('/estadisticas', [EstadisticaController::class, 'index']);
 
         // Bitácora + matriz de acceso + visitas
         Route::get('/bitacora', [BitacoraController::class, 'index']);

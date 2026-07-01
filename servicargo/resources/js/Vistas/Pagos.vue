@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import AppLayout from '../Plantillas/AppLayout.vue';
 import { api } from '../servicios/useApi';
 import { useAuth } from '../servicios/useAuth';
@@ -16,7 +16,9 @@ const metodos = ref([]);
 const modal = ref(false);
 const ventaSel = ref(null);
 const form = ref({ monto: '', metodo_pago: 'QR', metodo_pago_id: '', numero_cuota: '' });
-const qr = ref(null);
+const qr = ref(null);            // { pago_id, qr_base64, expira_en }
+const esperandoQr = ref(false);  // polling en curso
+let pollTimer = null;
 
 // Registro de método de pago
 const nuevoMetodo = ref({ tipo: esCliente.value ? 'QR' : 'EFECTIVO', alias: '', referencia: '' });
@@ -67,21 +69,46 @@ async function registrar() {
     if (form.value.numero_cuota) body.numero_cuota = form.value.numero_cuota;
     const d = await api('/pagos', { method: 'POST', body });
     if (form.value.metodo_pago === 'QR') {
-      qr.value = { pago_id: d.pago_id, qr: d.qr };
-      toast.info('QR generado. Confirma el pago.');
+      qr.value = { pago_id: d.pago_id, qr_base64: d.qr_base64, expira_en: d.expira_en };
+      toast.info('QR generado. Escanéalo con tu app bancaria.');
+      iniciarPolling();
     } else {
       toast.exito(`Pago registrado. Factura ${d.factura.numero_factura}. Venta: ${d.estado_venta}`);
-      modal.value = false; cargar();
+      cerrarModal(); cargar();
     }
   } catch (e) { toast.error(e.message); }
 }
-async function confirmarQR() {
-  try {
-    const d = await api(`/pagos/${qr.value.pago_id}/simular-confirmacion`, { method: 'POST' });
-    toast.exito(`Pago QR confirmado. Factura ${d.factura.numero_factura}. Venta: ${d.estado_venta}`);
-    modal.value = false; cargar();
-  } catch (e) { toast.error(e.message); }
+
+/* ---------- QR: polling del estado en PagoFácil ---------- */
+function iniciarPolling() {
+  detenerPolling();
+  esperandoQr.value = true;
+  pollTimer = setInterval(verificarPago, 4000);
 }
+function detenerPolling() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  esperandoQr.value = false;
+}
+async function verificarPago(manual = false) {
+  if (!qr.value) return;
+  try {
+    const d = await api(`/pagos/${qr.value.pago_id}/estado-qr`);
+    if (d.pagado) {
+      detenerPolling();
+      toast.exito(`Pago QR confirmado. Factura ${d.factura?.numero_factura ?? ''}. Venta: ${d.estado_venta}`);
+      cerrarModal(); cargar();
+    } else if (manual) {
+      toast.info('El pago aún no se ha registrado. Intenta de nuevo en unos segundos.');
+    }
+  } catch (e) { if (manual) toast.error(e.message); }
+}
+
+function cerrarModal() {
+  detenerPolling();
+  modal.value = false;
+  qr.value = null;
+}
+onUnmounted(detenerPolling);
 </script>
 
 <template>
@@ -146,7 +173,7 @@ async function confirmarQR() {
       </table>
     </div>
 
-    <div v-if="modal" class="modal-fondo" @click.self="modal=false">
+    <div v-if="modal" class="modal-fondo" @click.self="cerrarModal">
       <div class="modal">
         <h3 style="margin-top:0">Pagar venta {{ ventaSel?.codigo }}</h3>
         <template v-if="!qr">
@@ -159,30 +186,40 @@ async function confirmarQR() {
               <option v-for="m in metodosUsables" :key="m.id" :value="m.id">{{ m.tipo }} · {{ m.alias }}</option>
             </select>
 
-            <label>Tipo de pago</label>
+            <label>Método de pago</label>
             <select class="input" v-model="form.metodo_pago" :disabled="esCliente || !!form.metodo_pago_id">
               <option value="QR">QR</option>
               <option v-if="!esCliente" value="EFECTIVO">Efectivo</option>
             </select>
+            <p v-if="esCliente" style="color:var(--color-texto-suave); font-size:12px; margin:4px 0 0">
+              Desde tu cuenta solo puedes pagar con QR. Para pagar en efectivo acude a la tienda.
+            </p>
 
             <label v-if="ventaSel?.tipo_pago==='CREDITO'">Nº de cuota (plan de pagos)</label>
             <input v-if="ventaSel?.tipo_pago==='CREDITO'" class="input" type="number" v-model="form.numero_cuota" />
 
             <div class="fila-acciones" style="justify-content:flex-end; margin-top:16px">
-              <button type="button" class="btn secundario" @click="modal=false">Cancelar</button>
+              <button type="button" class="btn secundario" @click="cerrarModal">Cancelar</button>
               <button class="btn">{{ form.metodo_pago === 'QR' ? 'Generar QR' : 'Registrar pago' }}</button>
             </div>
           </form>
         </template>
         <template v-else>
           <div style="text-align:center; padding:14px">
-            <div style="background:#fff; border:2px dashed var(--color-borde); border-radius:12px; padding:24px; font-family:monospace; font-size:11px; word-break:break-all; color:#000">
-              {{ qr.qr }}
+            <div style="background:#fff; border:2px solid var(--color-borde); border-radius:12px; padding:16px; display:inline-block">
+              <img :src="'data:image/png;base64,' + qr.qr_base64" alt="QR de pago" style="width:240px; height:240px; display:block" />
             </div>
-            <p style="color:var(--color-texto-suave); margin-top:10px">QR PagoFácil (simulado). Confirma para registrar el pago.</p>
+            <p style="margin-top:12px; font-weight:600">Escanea el QR con tu app bancaria</p>
+            <p v-if="qr.expira_en" style="color:var(--color-texto-suave); font-size:13px; margin-top:4px">
+              Válido hasta: {{ qr.expira_en }}
+            </p>
+            <p style="color:var(--color-texto-suave); font-size:13px; margin-top:8px">
+              <span v-if="esperandoQr">⏳ Esperando confirmación del pago…</span>
+              <span v-else>Verificando…</span>
+            </p>
             <div class="fila-acciones" style="justify-content:center; margin-top:8px">
-              <button class="btn secundario" @click="modal=false">Cerrar</button>
-              <button class="btn acento" @click="confirmarQR">Simular confirmación</button>
+              <button class="btn secundario" @click="cerrarModal">Cerrar</button>
+              <button class="btn acento" @click="verificarPago(true)">Ya pagué / Verificar</button>
             </div>
           </div>
         </template>

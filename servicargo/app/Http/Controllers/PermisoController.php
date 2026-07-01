@@ -2,21 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Permiso;
-use App\Models\Recurso;
-use App\Support\BitacoraService;
+use App\Servicios\Core\PermisoService;
 use Illuminate\Http\Request;
 
 class PermisoController extends Controller
 {
+    public function __construct(private PermisoService $permisos) {}
+
     // Matriz completa (rol × recurso) para el dashboard
     public function index()
     {
-        return response()->json([
-            'recursos' => Recurso::orderBy('orden')->get(),
-            'roles' => ['admin', 'vendedor', 'cliente'],
-            'permisos' => Permiso::all(),
-        ]);
+        return response()->json($this->permisos->matriz());
     }
 
     // Actualiza una celda de la matriz
@@ -31,12 +27,7 @@ class PermisoController extends Controller
             'eliminar' => ['required', 'boolean'],
         ]);
 
-        $permiso = Permiso::updateOrCreate(
-            ['rol' => $datos['rol'], 'recurso_id' => $datos['recurso_id']],
-            $datos
-        );
-
-        BitacoraService::registrar($request->user()->id, 'accion', 'permisos', "Actualizar matriz {$datos['rol']}/{$datos['recurso_id']}", $request);
+        $permiso = $this->permisos->actualizar($datos, $request->user()->id);
 
         return response()->json(['message' => 'Permiso actualizado.', 'permiso' => $permiso]);
     }

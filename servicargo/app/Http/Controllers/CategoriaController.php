@@ -2,25 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Categoria;
-use App\Support\BitacoraService;
+use App\Servicios\Gestion\CategoriaService;
 use Illuminate\Http\Request;
 
 class CategoriaController extends Controller
 {
+    public function __construct(private CategoriaService $categorias) {}
+
     public function index()
     {
-        return response()->json(Categoria::orderBy('nombre')->get());
+        return response()->json($this->categorias->listar());
     }
 
     public function show($id)
     {
-        $c = Categoria::find($id);
-        if (! $c) {
-            return response()->json(['message' => 'Categoría no encontrada.'], 404);
-        }
-
-        return response()->json($c);
+        return response()->json($this->categorias->obtener($id));
     }
 
     public function store(Request $request)
@@ -30,39 +26,26 @@ class CategoriaController extends Controller
             'descripcion' => ['nullable', 'string'],
         ]);
 
-        $c = Categoria::create($datos);
-        BitacoraService::registrar($request->user()->id, 'accion', 'catalogo', "Crear categoría #{$c->id}", $request);
+        $c = $this->categorias->crear($datos, $request->user()->id);
 
         return response()->json(['message' => 'Categoría creada.', 'categoria' => $c], 201);
     }
 
     public function update(Request $request, $id)
     {
-        $c = Categoria::find($id);
-        if (! $c) {
-            return response()->json(['message' => 'Categoría no encontrada.'], 404);
-        }
-
         $datos = $request->validate([
             'nombre' => ['sometimes', 'string', 'max:120'],
             'descripcion' => ['nullable', 'string'],
         ]);
 
-        $c->update($datos);
-        BitacoraService::registrar($request->user()->id, 'accion', 'catalogo', "Editar categoría #{$c->id}", $request);
+        $c = $this->categorias->actualizar($id, $datos, $request->user()->id);
 
         return response()->json(['message' => 'Categoría actualizada.', 'categoria' => $c]);
     }
 
     public function destroy(Request $request, $id)
     {
-        $c = Categoria::find($id);
-        if (! $c) {
-            return response()->json(['message' => 'Categoría no encontrada.'], 404);
-        }
-
-        $c->delete(); // soft delete
-        BitacoraService::registrar($request->user()->id, 'accion', 'catalogo', "Eliminar categoría #{$id}", $request);
+        $this->categorias->eliminar($id, $request->user()->id);
 
         return response()->json(['message' => 'Categoría eliminada.']);
     }

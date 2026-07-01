@@ -2,24 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Factura;
-use App\Models\Pago;
-use App\Models\Venta;
-use App\Support\BitacoraService;
+use App\Servicios\Comercial\PagoService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class PagoController extends Controller
 {
+    public function __construct(private PagoService $pagos) {}
+
     public function index(Request $request)
     {
-        $q = Pago::with('venta');
-        if ($request->user()->esCliente()) {
-            $q->whereHas('venta', fn ($v) => $v->where('cliente_id', $request->user()->id));
-        }
-
-        return response()->json($q->orderByDesc('id')->get());
+        return response()->json($this->pagos->listarPara($request->user()));
     }
 
     public function registrar(Request $request)
@@ -33,134 +27,77 @@ class PagoController extends Controller
             'referencia' => ['nullable', 'string', 'max:60'],
         ]);
 
-        $usuario = $request->user();
-        $venta = Venta::find($datos['venta_id']);
-
-        // Si paga con un método de pago registrado, debe ser suyo y define tipo/referencia
-        if (! empty($datos['metodo_pago_id'])) {
-            $metodo = \App\Models\MetodoPago::where('usuario_id', $usuario->id)
-                ->where('activo', true)->find($datos['metodo_pago_id']);
-            if (! $metodo) {
-                return response()->json(['message' => 'Método de pago no válido o no te pertenece.'], 422);
-            }
-            $datos['metodo_pago'] = $metodo->tipo;
-            $datos['referencia'] = $datos['referencia'] ?? $metodo->alias;
-        }
-
-        // El cliente solo paga lo suyo y solo por QR
-        if ($usuario->esCliente()) {
-            if ($venta->cliente_id !== $usuario->id) {
-                return response()->json(['message' => 'No puedes pagar una venta ajena.'], 403);
-            }
-            if ($datos['metodo_pago'] !== 'QR') {
-                return response()->json(['message' => 'El cliente solo puede pagar con QR. Para EFECTIVO acude a un vendedor.'], 422);
-            }
-        }
-
-        if ($venta->estado === 'PAGADA') {
-            return response()->json(['message' => 'La venta ya está pagada.'], 422);
-        }
-        if (isset($datos['numero_cuota']) && $datos['numero_cuota'] > $venta->numero_cuotas) {
-            return response()->json(['message' => 'El número de cuota excede las cuotas de la venta.'], 422);
-        }
-
-        // QR: se registra el pago como PENDIENTE y se devuelve el QR (PagoFácil simulado)
-        if ($datos['metodo_pago'] === 'QR') {
-            $pago = Pago::create([
-                'venta_id' => $venta->id,
-                'estado' => 'PENDIENTE',
-                'fecha_pago' => now(),
-                'metodo_pago' => 'QR',
-                'monto' => $datos['monto'],
-                'numero_cuota' => $datos['numero_cuota'] ?? null,
-                'referencia' => $datos['referencia'] ?? null,
-            ]);
-
-            return response()->json([
-                'message' => 'QR generado. Confirma el pago para registrarlo.',
-                'pago_id' => $pago->id,
-                'qr' => 'SERVICARGO|venta:' . $venta->id . '|monto:' . $datos['monto'] . '|pago:' . $pago->id,
-                'simulado' => true,
-            ], 201);
-        }
-
-        // EFECTIVO: se confirma de inmediato
-        $resultado = DB::transaction(function () use ($venta, $datos, $usuario) {
-            $pago = Pago::create([
-                'venta_id' => $venta->id,
-                'estado' => 'REGISTRADO',
-                'fecha_pago' => now(),
-                'metodo_pago' => 'EFECTIVO',
-                'monto' => $datos['monto'],
-                'numero_cuota' => $datos['numero_cuota'] ?? null,
-                'referencia' => $datos['referencia'] ?? null,
-            ]);
-
-            return $this->confirmar($venta, $pago);
-        });
-
-        BitacoraService::registrar($usuario->id, 'accion', 'pagos', "Pago EFECTIVO venta #{$venta->id}", $request);
-
-        return response()->json([
-            'message' => 'Pago registrado.',
-            'pago' => $resultado['pago'],
-            'factura' => $resultado['factura'],
-            'estado_venta' => $resultado['estado_venta'],
-        ], 201);
+        return response()->json($this->pagos->registrar($datos, $request->user()), 201);
     }
 
-    // Confirmación del QR (callback de PagoFácil — simulado)
-    public function simularConfirmacion(Request $request, $pagoId)
+    /** Polling del frontend: consulta a PagoFácil si el QR ya fue pagado. */
+    public function estadoQr(Request $request, $pago)
     {
-        $pago = Pago::find($pagoId);
-        if (! $pago) {
-            return response()->json(['message' => 'Pago no encontrado.'], 404);
+        return response()->json($this->pagos->consultarEstadoQr($pago, $request->user()));
+    }
+
+    /**
+     * Callback de PagoFácil (público, sin auth ni CSRF). PagoFácil hace POST aquí
+     * cuando el pago se completa. Debe responder con el formato que la pasarela espera.
+     */
+    public function callback(Request $request)
+    {
+        $pedidoId = $request->input('PedidoID')
+            ?? $request->input('companyTransactionId')
+            ?? $request->input('paymentNumber');
+        $estado = $request->input('Estado') ?? $request->input('paymentStatus');
+
+        Log::info('Callback PagoFácil', $request->all());
+
+        try {
+            if ($pedidoId) {
+                $this->pagos->confirmarPorCallback((string) $pedidoId, $estado !== null ? (int) $estado : null);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Error procesando callback PagoFácil: ' . $e->getMessage());
         }
-        if ($pago->estado !== 'PENDIENTE') {
-            return response()->json(['message' => 'El pago no está pendiente de confirmación.'], 422);
-        }
 
-        $venta = Venta::find($pago->venta_id);
-        $resultado = DB::transaction(function () use ($venta, $pago) {
-            $pago->estado = 'REGISTRADO';
-            $pago->save();
-
-            return $this->confirmar($venta, $pago);
-        });
-
-        BitacoraService::registrar($request->user()->id ?? null, 'accion', 'pagos', "Confirmación QR venta #{$venta->id}", $request);
-
+        // Respuesta esperada por PagoFácil para dar el pago por notificado.
         return response()->json([
-            'message' => 'Pago QR confirmado.',
-            'pago' => $resultado['pago'],
-            'factura' => $resultado['factura'],
-            'estado_venta' => $resultado['estado_venta'],
+            'error' => 0,
+            'status' => 1,
+            'message' => 'Pago realizado correctamente',
+            'messageMostrar' => 0,
+            'messageSistema' => '',
+            'values' => true,
         ]);
     }
 
-    /** Genera la factura del pago y actualiza el estado de la venta. */
-    private function confirmar(Venta $venta, Pago $pago): array
+    /** Página de retorno del navegador tras el pago (GET/POST). */
+    public function retorno()
     {
-        $factura = Factura::create([
-            'venta_id' => $venta->id,
-            'estado' => 'EMITIDA',
-            'fecha_emision' => now(),
-            'impuestos' => 0,
-            'numero_factura' => "FAC-{$venta->id}-{$pago->id}",
-            'subtotal' => $pago->monto,
-            'total' => $pago->monto,
-            'metodo_pago' => $pago->metodo_pago,
-            'numero_cuota' => $pago->numero_cuota,
-        ]);
-
-        $totalPagado = (float) $venta->pagos()->where('estado', 'REGISTRADO')->sum('monto');
-        $venta->estado = $totalPagado >= (float) $venta->total_final ? 'PAGADA' : 'PARCIAL';
-        $venta->save();
-
-        return [
-            'pago' => $pago,
-            'factura' => $factura,
-            'estado_venta' => $venta->estado,
-        ];
+        return response(<<<'HTML'
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pago Completado - Servicargo</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: sans-serif; background: #f0f4f8; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .box { background: #fff; border-radius: 12px; padding: 40px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,.1); max-width: 400px; width: 90%; }
+        .icono { font-size: 60px; margin-bottom: 20px; }
+        h1 { color: #2e7d32; margin-bottom: 10px; font-size: 24px; }
+        p { color: #555; line-height: 1.6; }
+        .sub { color: #888; font-size: 14px; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <div class="icono">✅</div>
+        <h1>¡Pago Completado!</h1>
+        <p>Tu pago fue procesado correctamente.</p>
+        <p>En breve verás la factura reflejada en tu cuenta.</p>
+        <p class="sub">Puedes cerrar esta ventana.</p>
+    </div>
+</body>
+</html>
+HTML)->header('Content-Type', 'text/html');
     }
 }

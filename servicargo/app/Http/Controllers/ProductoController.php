@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Producto;
-use App\Support\BitacoraService;
+use App\Servicios\Gestion\ProductoService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -11,24 +10,16 @@ class ProductoController extends Controller
 {
     private array $tiposValidos = ['carga_general', 'fragil', 'perecedera', 'peligrosa'];
 
+    public function __construct(private ProductoService $productos) {}
+
     public function index(Request $request)
     {
-        $q = Producto::with('categoria');
-        if ($request->filled('categoria_id') && $request->query('categoria_id') !== '*') {
-            $q->where('categoria_id', $request->query('categoria_id'));
-        }
-
-        return response()->json($q->orderBy('nombre')->get());
+        return response()->json($this->productos->listar($request->query('categoria_id')));
     }
 
     public function show($codigo)
     {
-        $p = Producto::with('categoria')->where('codigo', $codigo)->first();
-        if (! $p) {
-            return response()->json(['message' => 'Producto no encontrado.'], 404);
-        }
-
-        return response()->json($p);
+        return response()->json($this->productos->obtenerPorCodigo($codigo));
     }
 
     public function store(Request $request)
@@ -42,19 +33,13 @@ class ProductoController extends Controller
             'tipo' => ['required', Rule::in($this->tiposValidos)],
         ]);
 
-        $p = Producto::create($datos);
-        BitacoraService::registrar($request->user()->id, 'accion', 'catalogo', "Crear producto {$p->codigo}", $request);
+        $p = $this->productos->crear($datos, $request->user()->id);
 
         return response()->json(['message' => 'Producto creado.', 'producto' => $p], 201);
     }
 
     public function update(Request $request, $codigo)
     {
-        $p = Producto::where('codigo', $codigo)->first();
-        if (! $p) {
-            return response()->json(['message' => 'Producto no encontrado.'], 404);
-        }
-
         $datos = $request->validate([
             'categoria_id' => ['sometimes', 'integer', 'exists:categoria,id'],
             'nombre' => ['sometimes', 'string', 'max:120'],
@@ -63,21 +48,14 @@ class ProductoController extends Controller
             'tipo' => ['sometimes', Rule::in($this->tiposValidos)],
         ]);
 
-        $p->update($datos);
-        BitacoraService::registrar($request->user()->id, 'accion', 'catalogo', "Editar producto {$p->codigo}", $request);
+        $p = $this->productos->actualizarPorCodigo($codigo, $datos, $request->user()->id);
 
         return response()->json(['message' => 'Producto actualizado.', 'producto' => $p]);
     }
 
     public function destroy(Request $request, $codigo)
     {
-        $p = Producto::where('codigo', $codigo)->first();
-        if (! $p) {
-            return response()->json(['message' => 'Producto no encontrado.'], 404);
-        }
-
-        $p->delete(); // soft delete
-        BitacoraService::registrar($request->user()->id, 'accion', 'catalogo', "Eliminar producto {$codigo}", $request);
+        $this->productos->eliminarPorCodigo($codigo, $request->user()->id);
 
         return response()->json(['message' => 'Producto eliminado.']);
     }

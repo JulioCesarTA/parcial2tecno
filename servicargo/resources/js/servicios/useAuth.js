@@ -1,6 +1,7 @@
 import { reactive, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { api, setToken, getToken } from './useApi';
+import { withBase } from './useBase';
 
 const SES_KEY = 'sc_sesion';
 
@@ -71,7 +72,7 @@ export function useAuth() {
     async function logout() {
         try { await api('/auth/logout', { method: 'POST' }); } catch (e) { /* ignore */ }
         cerrarLocal();
-        router.visit('/login');
+        router.visit(withBase('/login'));
     }
 
     // ¿el rol actual tiene permiso (accion) sobre el recurso?
@@ -81,7 +82,7 @@ export function useAuth() {
 
     function requiereSesion() {
         if (!autenticado.value) {
-            router.visit('/login');
+            router.visit(withBase('/login'));
             return false;
         }
         return true;

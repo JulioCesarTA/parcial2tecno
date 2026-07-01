@@ -25,9 +25,25 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             HandleInertiaRequests::class,
         ]);
+
+        // PagoFácil llama a /callback y /return sin token CSRF.
+        $middleware->validateCsrfTokens(except: [
+            'callback',
+            'return',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        // Errores de la capa de negocio (Services): mensaje + código HTTP.
+        // JSON/AJAX -> { message }; Inertia/web -> redirect back con error.
+        $exceptions->render(function (\App\Servicios\ErrorDominio $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['message' => $e->getMessage()], $e->getStatusCode());
+            }
+
+            return back()->withErrors(['dominio' => $e->getMessage()]);
+        });
     })->create();

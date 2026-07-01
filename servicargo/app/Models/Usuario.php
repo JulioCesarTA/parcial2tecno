@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class Usuario extends Model
+class Usuario extends Authenticatable
 {
     protected $table = 'usuario';
     public $timestamps = false;
@@ -14,6 +14,23 @@ class Usuario extends Model
     ];
 
     protected $hidden = ['contrasena'];
+
+    // La contraseña vive en la columna 'contrasena' (no 'password')
+    public function getAuthPassword(): string
+    {
+        return $this->contrasena;
+    }
+
+    public function getAuthPasswordName(): string
+    {
+        return 'contrasena';
+    }
+
+    // La tabla usuario no tiene columna remember_token
+    public function getRememberTokenName(): string
+    {
+        return '';
+    }
 
     // Normaliza sinónimos de rol a la forma canónica
     public static function normalizarRol(string $rol): string

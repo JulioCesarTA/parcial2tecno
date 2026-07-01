@@ -10,11 +10,13 @@ class Pago extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'venta_id', 'estado', 'fecha_pago', 'metodo_pago', 'monto', 'numero_cuota', 'referencia',
+        'venta_id', 'estado', 'fecha_pago', 'metodo_pago', 'monto', 'numero_cuota',
+        'referencia', 'transaccion_id', 'expira_en',
     ];
 
     protected $casts = [
         'fecha_pago' => 'datetime',
+        'expira_en' => 'datetime',
         'monto' => 'decimal:2',
     ];
 

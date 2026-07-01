@@ -2,19 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\MetodoPago;
-use App\Support\BitacoraService;
+use App\Servicios\Comercial\MetodoPagoService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class MetodoPagoController extends Controller
 {
+    public function __construct(private MetodoPagoService $metodos) {}
+
     // Cada usuario gestiona SUS propios métodos de pago
     public function index(Request $request)
     {
-        return response()->json(
-            MetodoPago::where('usuario_id', $request->user()->id)->orderByDesc('id')->get()
-        );
+        return response()->json($this->metodos->listarDe($request->user()));
     }
 
     public function store(Request $request)
@@ -24,40 +23,28 @@ class MetodoPagoController extends Controller
             'alias' => ['required', 'string', 'max:80'],
             'referencia' => ['nullable', 'string', 'max:60'],
         ]);
-        $datos['usuario_id'] = $request->user()->id;
-        $datos['activo'] = true;
 
-        $m = MetodoPago::create($datos);
-        BitacoraService::registrar($request->user()->id, 'accion', 'metodos_pago', "Registrar método de pago #{$m->id}", $request);
+        $m = $this->metodos->crear($datos, $request->user());
 
         return response()->json(['message' => 'Método de pago registrado.', 'metodo' => $m], 201);
     }
 
     public function update(Request $request, $id)
     {
-        $m = MetodoPago::where('usuario_id', $request->user()->id)->find($id);
-        if (! $m) {
-            return response()->json(['message' => 'Método de pago no encontrado.'], 404);
-        }
-
         $datos = $request->validate([
             'alias' => ['sometimes', 'string', 'max:80'],
             'referencia' => ['nullable', 'string', 'max:60'],
             'activo' => ['sometimes', 'boolean'],
         ]);
-        $m->update($datos);
+
+        $m = $this->metodos->actualizar($id, $datos, $request->user());
 
         return response()->json(['message' => 'Método de pago actualizado.', 'metodo' => $m]);
     }
 
     public function destroy(Request $request, $id)
     {
-        $m = MetodoPago::where('usuario_id', $request->user()->id)->find($id);
-        if (! $m) {
-            return response()->json(['message' => 'Método de pago no encontrado.'], 404);
-        }
-        $m->delete();
-        BitacoraService::registrar($request->user()->id, 'accion', 'metodos_pago', "Eliminar método de pago #{$id}", $request);
+        $this->metodos->eliminar($id, $request->user());
 
         return response()->json(['message' => 'Método de pago eliminado.']);
     }

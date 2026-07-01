@@ -206,3 +206,96 @@ tbody tr:hover { background: var(--color-fondo); }
 @media (max-width: 800px) {
     .sidebar { display: none; }
 }
+
+/* ============================================================
+   REDISEÑO 2025 — shell neomórfico (riel oscuro + panel flotante)
+   Base tomada de la imagen de referencia. Usa los tokens de tema,
+   así se adapta a día/noche/niños/jóvenes automáticamente.
+   ============================================================ */
+.shell {
+    display: flex; gap: 12px; padding: 12px;
+    min-height: 100vh; background: var(--color-fondo);
+}
+
+/* Riel oscuro de íconos (fijo, independiente del tema) */
+.rail {
+    width: 60px; background: #17181c; border-radius: 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+    padding: 14px 0; position: sticky; top: 12px; height: calc(100vh - 24px);
+}
+.rail-grupo { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.rail-logo { color: #fff; margin-bottom: 10px; display: grid; place-items: center; }
+.rail-btn {
+    width: 40px; height: 40px; display: grid; place-items: center; border-radius: 13px;
+    color: #9aa0aa; background: transparent; border: none; cursor: pointer; transition: all .15s;
+}
+.rail-btn:hover { background: #26282f; color: #fff; }
+.rail-btn.activo { background: #fff; color: #17181c; }
+
+/* Tarjeta grande que contiene sidebar + contenido */
+.board {
+    flex: 1; display: flex; min-width: 0;
+    background: var(--color-superficie); border: 1px solid var(--color-borde);
+    border-radius: 22px; box-shadow: var(--sombra); overflow: hidden;
+    min-height: calc(100vh - 24px);
+}
+
+/* Panel de navegación (claro) — reemplaza el sidebar anterior */
+.board .sidebar {
+    width: 256px; background: transparent; border: none; border-right: 1px solid var(--color-borde);
+    height: auto; position: static; padding: 16px 14px; display: flex; flex-direction: column; gap: 6px;
+}
+.perfil { display: flex; align-items: center; gap: 11px; padding: 6px 6px 4px; }
+.avatar {
+    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--color-primario), var(--color-acento));
+    color: #fff; display: grid; place-items: center; font-weight: 800; font-size: calc(15px * var(--escala));
+}
+.perfil-nombre { font-weight: 700; font-size: calc(14.5px * var(--escala)); display: flex; align-items: center; gap: 6px; }
+.perfil-correo { font-size: calc(12px * var(--escala)); color: var(--color-texto-suave); }
+.nav-label {
+    font-size: calc(10.5px * var(--escala)); text-transform: uppercase; letter-spacing: .06em;
+    color: var(--color-texto-suave); font-weight: 800; margin: 12px 8px 4px;
+}
+.board .nav { flex: 1; overflow-y: visible; padding: 0; }
+.board .nav a {
+    padding: 9px 12px; border-radius: 12px; font-weight: 600;
+    font-size: calc(13.5px * var(--escala)); color: var(--color-texto);
+}
+.board .nav a:hover { background: var(--color-fondo); }
+.board .nav a.activo { background: var(--color-primario); color: #fff; box-shadow: var(--sombra); }
+
+/* Popover de configuración (temas + accesibilidad, con nombres) */
+.config-pop {
+    position: fixed; left: 78px; bottom: 20px; z-index: 200; width: 260px;
+    background: var(--color-superficie); border: 1px solid var(--color-borde);
+    border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.22); padding: 16px;
+}
+.config-pop h4 { margin: 0 0 8px; font-size: calc(13px * var(--escala)); }
+.config-pop .grupo { margin-bottom: 14px; }
+.config-pop .opciones { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+    padding: 6px 11px; border-radius: 999px; border: 1px solid var(--color-borde);
+    background: var(--color-fondo); cursor: pointer; font-size: calc(12.5px * var(--escala)); font-weight: 600; color: var(--color-texto);
+}
+.chip.activo { background: var(--color-primario); color: #fff; border-color: transparent; }
+
+/* Tarjetas KPI (número protagonista + variación) */
+.kpi {
+    background: var(--color-fondo); border: 1px solid var(--color-borde); border-radius: 18px;
+    padding: 18px 20px; display: flex; flex-direction: column; gap: 8px;
+}
+.kpi-top { display: flex; align-items: center; justify-content: space-between; }
+.kpi-etiqueta { color: var(--color-texto-suave); font-weight: 600; font-size: calc(13px * var(--escala)); }
+.kpi-valor { font-size: calc(40px * var(--escala)); font-weight: 800; line-height: 1; color: var(--color-texto); }
+.kpi-var { font-size: calc(12px * var(--escala)); font-weight: 800; padding: 3px 9px; border-radius: 999px; }
+.kpi-var.sube { background: rgba(22,163,74,.14); color: var(--color-exito); }
+.kpi-var.baja { background: rgba(220,38,38,.14); color: var(--color-error); }
+.kpi-link { color: var(--color-primario); font-weight: 700; font-size: calc(13px * var(--escala)); display: inline-flex; align-items: center; gap: 5px; }
+
+@media (max-width: 800px) {
+    .rail { display: none; }
+    .board .sidebar { display: none; }
+    .shell { padding: 0; }
+    .board { border-radius: 0; border: none; }
+}

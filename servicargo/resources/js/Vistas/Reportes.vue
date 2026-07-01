@@ -4,6 +4,7 @@ import AppLayout from '../Plantillas/AppLayout.vue';
 import { api, getToken } from '../servicios/useApi';
 import { useAuth } from '../servicios/useAuth';
 import { useToast } from '../servicios/useUI';
+import { withBase } from '../servicios/useBase';
 
 const { sesion } = useAuth();
 const toast = useToast();
@@ -35,7 +36,7 @@ function cambiar(t) { tipo.value = t; datos.value = null; cargar(); }
 async function descargarPdf() {
   try {
     const params = new URLSearchParams(fi.value ? { fecha_inicio: fi.value, fecha_fin: ff.value || fi.value } : { fecha_inicio: '*' });
-    const res = await fetch(`/api/reportes/${tipo.value}/pdf?` + params, { headers: { Authorization: 'Bearer ' + getToken() } });
+    const res = await fetch(withBase(`/api/reportes/${tipo.value}/pdf?` + params), { headers: { Authorization: 'Bearer ' + getToken() } });
     if (!res.ok) throw new Error('No se pudo generar el PDF');
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);

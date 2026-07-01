@@ -1,4 +1,6 @@
 // Cliente HTTP que inyecta el token JWT en cada petición
+import { withBase } from './useBase';
+
 const TOKEN_KEY = 'sc_token';
 
 export function getToken() {
@@ -10,7 +12,7 @@ export function setToken(t) {
 }
 
 export async function api(path, { method = 'GET', body = null, params = null } = {}) {
-    let url = '/api' + path;
+    let url = withBase('/api' + path);
     if (params) {
         const qs = new URLSearchParams(params).toString();
         if (qs) url += '?' + qs;
