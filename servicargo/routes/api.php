@@ -127,6 +127,7 @@ Route::middleware(['jwt', 'bitacora'])->group(function () {
     Route::get('/pagos', [PagoController::class, 'index']);
     Route::post('/pagos', [PagoController::class, 'registrar']);
     Route::get('/pagos/{pago}/estado-qr', [PagoController::class, 'estadoQr']);
+    Route::get('/ventas/{venta}/qr-activo', [PagoController::class, 'qrActivo']);
 
     // Facturas
     Route::get('/facturas', [FacturaController::class, 'index']);

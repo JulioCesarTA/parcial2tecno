@@ -22,7 +22,6 @@ class PagoController extends Controller
             'venta_id' => ['required', 'integer', 'exists:venta,id'],
             'monto' => ['required', 'numeric', 'gt:0'],
             'metodo_pago' => ['required', Rule::in(['EFECTIVO', 'QR'])],
-            'metodo_pago_id' => ['nullable', 'integer', 'exists:metodo_pago,id'],
             'numero_cuota' => ['nullable', 'integer', 'gt:0'],
             'referencia' => ['nullable', 'string', 'max:60'],
         ]);
@@ -34,6 +33,12 @@ class PagoController extends Controller
     public function estadoQr(Request $request, $pago)
     {
         return response()->json($this->pagos->consultarEstadoQr($pago, $request->user()));
+    }
+
+    /** Devuelve el QR pendiente de una venta para volver a mostrarlo (o null). */
+    public function qrActivo(Request $request, $venta)
+    {
+        return response()->json($this->pagos->qrActivoDeVenta($venta, $request->user()));
     }
 
     /**

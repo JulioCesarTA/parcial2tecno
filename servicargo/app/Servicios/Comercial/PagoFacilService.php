@@ -3,6 +3,7 @@
 namespace App\Servicios\Comercial;
 
 use App\Servicios\ErrorDominio;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -64,8 +65,27 @@ class PagoFacilService
         return [
             'qr_base64' => $qrBase64,
             'transaction_id' => isset($values['transactionId']) ? (string) $values['transactionId'] : null,
-            'expiration_date' => $values['expirationDate'] ?? null,
+            'expiration_date' => $this->parseExpiracionBolivia($values['expirationDate'] ?? null),
         ];
+    }
+
+    /**
+     * PagoFácil devuelve expirationDate como hora local de Bolivia ("America/La_Paz",
+     * UTC-4) sin indicar zona horaria. La app corre en UTC (config/app.php), así que
+     * hay que convertirla explícitamente o el QR "expira" ~4h antes de lo real.
+     */
+    private function parseExpiracionBolivia(?string $expirationDate): ?Carbon
+    {
+        if (empty($expirationDate)) {
+            return null;
+        }
+        try {
+            return Carbon::createFromFormat('Y-m-d H:i:s', $expirationDate, 'America/La_Paz')->utc();
+        } catch (\Throwable $e) {
+            Log::warning('No se pudo parsear expirationDate de PagoFácil: ' . $expirationDate);
+
+            return null;
+        }
     }
 
     /**

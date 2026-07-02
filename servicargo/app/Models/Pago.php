@@ -11,7 +11,7 @@ class Pago extends Model
 
     protected $fillable = [
         'venta_id', 'estado', 'fecha_pago', 'metodo_pago', 'monto', 'numero_cuota',
-        'referencia', 'transaccion_id', 'expira_en',
+        'referencia', 'transaccion_id', 'codigo_pasarela', 'qr_base64', 'expira_en',
     ];
 
     protected $casts = [

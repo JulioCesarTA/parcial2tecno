@@ -44,7 +44,7 @@ return [
         'token_service' => env('PAGOFACIL_TOKEN_SERVICE'),
         'token_secret' => env('PAGOFACIL_TOKEN_SECRET'),
         'payment_method_id' => env('PAGOFACIL_PAYMENT_METHOD_ID', '34'),
-        'callback_url' => env('PAGOFACIL_CALLBACK_URL', 'http://tecnoweb-servicargo.abrdns.com/callback'),
+        'callback_url' => env('PAGOFACIL_CALLBACK_URL', 'https://tecnoweb-servicargo.abrdns.com/callback'),
         'currency' => (int) env('PAGOFACIL_CURRENCY', 2),
         'document_type' => (int) env('PAGOFACIL_DOCUMENT_TYPE', 1),
         // Verificación TLS. En producción déjalo en true; en local (Windows sin CA
