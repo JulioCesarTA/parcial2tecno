@@ -12,6 +12,7 @@ use App\Http\Controllers\FacturaController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\MetodoPagoController;
 use App\Http\Controllers\PagoController;
+use App\Http\Controllers\PerfilController;
 use App\Http\Controllers\PermisoController;
 use App\Http\Controllers\PreferenciaController;
 use App\Http\Controllers\ProductoController;
@@ -41,6 +42,11 @@ Route::middleware(['jwt', 'bitacora'])->group(function () {
     // Preferencias de tema/accesibilidad (por usuario, requisito 5)
     Route::get('/preferencias', [PreferenciaController::class, 'show']);
     Route::put('/preferencias', [PreferenciaController::class, 'update']);
+
+    // Perfil propio (cualquier usuario autenticado edita SUS datos y su foto)
+    Route::get('/perfil', [PerfilController::class, 'show']);
+    Route::put('/perfil', [PerfilController::class, 'update']);
+    Route::post('/perfil/foto', [PerfilController::class, 'foto']);
 
     // Usuarios (solo admin)
     Route::middleware('rol:admin')->group(function () {
@@ -140,6 +146,8 @@ Route::middleware(['jwt', 'bitacora'])->group(function () {
 
         // Estadísticas del negocio (requisito 8)
         Route::get('/estadisticas', [EstadisticaController::class, 'index']);
+        // Gráficos generados con JpGraph (imagen PNG por tipo)
+        Route::get('/estadisticas/grafico/{tipo}', [EstadisticaController::class, 'grafico']);
 
         // Bitácora + matriz de acceso + visitas
         Route::get('/bitacora', [BitacoraController::class, 'index']);

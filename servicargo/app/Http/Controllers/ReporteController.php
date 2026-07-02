@@ -88,7 +88,10 @@ class ReporteController extends Controller
 
         $pdf = Pdf::loadView('reportes.generico', [
             'titulo' => 'Reporte de ' . ucfirst($tipo),
+            'tipo' => $tipo,
             'datos' => $datos,
+            'desde' => $ini,
+            'hasta' => $fin,
             'fecha' => now()->format('d/m/Y H:i'),
         ]);
 

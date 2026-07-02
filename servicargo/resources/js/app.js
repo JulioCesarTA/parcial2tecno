@@ -1,5 +1,6 @@
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/vue3';
+import VueApexCharts from 'vue3-apexcharts';
 
 createInertiaApp({
     title: (title) => (title ? `${title} · Servicargo` : 'Servicargo'),
@@ -10,6 +11,7 @@ createInertiaApp({
     setup({ el, App, props, plugin }) {
         createApp({ render: () => h(App, props) })
             .use(plugin)
+            .use(VueApexCharts)
             .mount(el);
     },
     progress: { color: '#1f6feb' },

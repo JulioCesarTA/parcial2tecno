@@ -20,6 +20,7 @@ class EstadisticaService
     {
         return [
             'kpis' => $this->kpis(),
+            'ventas_por_estado' => $this->ventasPorEstado(),
             'pagos_por_hora' => $this->pagosPorHora(),
             'actividad_30dias' => $this->actividad30dias(),
             'ventas_por_metodo' => $this->ventasPorMetodo(),
@@ -41,6 +42,17 @@ class EstadisticaService
             'cotizaciones_pendientes' => Cotizacion::where('estado', 'PENDIENTE')->count(),
             'tasa_conversion' => $totalCot > 0 ? round($aprobadas / $totalCot * 100, 1) : 0,
         ];
+    }
+
+    /** Ventas agrupadas por estado de cobro (PAGADA/PARCIAL/PENDIENTE). */
+    public function ventasPorEstado(): array
+    {
+        return DB::table('venta')
+            ->selectRaw('estado, count(*) as cantidad')
+            ->groupBy('estado')
+            ->orderByDesc('cantidad')
+            ->get()
+            ->toArray();
     }
 
     /** Distribución de pagos confirmados por hora del día → detecta horas pico. */

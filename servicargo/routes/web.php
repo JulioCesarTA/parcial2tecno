@@ -23,6 +23,7 @@ Route::post('/registro', [SessionAuthController::class, 'register'])->name('regi
 Route::post('/logout', [SessionAuthController::class, 'logout'])->name('logout');
 
 Route::get('/inicio', fn () => Inertia::render('Inicio'))->name('inicio');
+Route::get('/perfil', fn () => Inertia::render('Perfil'))->name('perfil');
 Route::get('/usuarios', fn () => Inertia::render('Usuarios'))->name('usuarios');
 Route::get('/catalogo', fn () => Inertia::render('Catalogo'))->name('catalogo');
 Route::get('/almacenes', fn () => Inertia::render('Almacenes'))->name('almacenes');
@@ -33,5 +34,6 @@ Route::get('/ventas', fn () => Inertia::render('Ventas'))->name('ventas');
 Route::get('/pagos', fn () => Inertia::render('Pagos'))->name('pagos');
 Route::get('/facturas', fn () => Inertia::render('Facturas'))->name('facturas');
 Route::get('/reportes', fn () => Inertia::render('Reportes'))->name('reportes');
+Route::get('/estadisticas', fn () => Inertia::render('Estadisticas'))->name('estadisticas');
 Route::get('/permisos', fn () => Inertia::render('Permisos'))->name('permisos');
 Route::get('/bitacora', fn () => Inertia::render('Bitacora'))->name('bitacora');

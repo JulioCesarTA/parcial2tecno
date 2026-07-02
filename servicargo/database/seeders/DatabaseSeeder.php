@@ -31,8 +31,9 @@ class DatabaseSeeder extends Seeder
             ['clave' => 'pagos', 'nombre' => 'Pagos', 'icono' => 'CreditCard', 'ruta' => 'pagos', 'orden' => 8],
             ['clave' => 'facturas', 'nombre' => 'Facturas', 'icono' => 'Receipt', 'ruta' => 'facturas', 'orden' => 9],
             ['clave' => 'reportes', 'nombre' => 'Reportes', 'icono' => 'BarChart3', 'ruta' => 'reportes', 'orden' => 10],
-            ['clave' => 'permisos', 'nombre' => 'Matriz de Acceso', 'icono' => 'Shield', 'ruta' => 'permisos', 'orden' => 11],
-            ['clave' => 'bitacora', 'nombre' => 'Bitácora', 'icono' => 'ScrollText', 'ruta' => 'bitacora', 'orden' => 12],
+            ['clave' => 'estadisticas', 'nombre' => 'Estadísticas', 'icono' => 'PieChart', 'ruta' => 'estadisticas', 'orden' => 11],
+            ['clave' => 'permisos', 'nombre' => 'Matriz de Acceso', 'icono' => 'Shield', 'ruta' => 'permisos', 'orden' => 12],
+            ['clave' => 'bitacora', 'nombre' => 'Bitácora', 'icono' => 'ScrollText', 'ruta' => 'bitacora', 'orden' => 13],
         ];
         $recObj = [];
         foreach ($recursos as $r) {
@@ -46,19 +47,19 @@ class DatabaseSeeder extends Seeder
                 'usuarios' => [1, 1, 1, 1], 'catalogo' => [1, 1, 1, 1], 'almacenes' => [1, 1, 1, 1],
                 'inventario' => [1, 1, 1, 1], 'cotizaciones' => [1, 1, 1, 1], 'encomiendas' => [1, 1, 1, 0],
                 'ventas' => [1, 1, 0, 0], 'pagos' => [1, 1, 0, 0], 'facturas' => [1, 0, 0, 0],
-                'reportes' => [1, 0, 0, 0], 'permisos' => [1, 0, 1, 0], 'bitacora' => [1, 0, 0, 0],
+                'reportes' => [1, 0, 0, 0], 'estadisticas' => [1, 0, 0, 0], 'permisos' => [1, 0, 1, 0], 'bitacora' => [1, 0, 0, 0],
             ],
             'vendedor' => [
                 'usuarios' => [0, 0, 0, 0], 'catalogo' => [1, 0, 0, 0], 'almacenes' => [0, 0, 0, 0],
                 'inventario' => [1, 1, 0, 0], 'cotizaciones' => [1, 1, 1, 0], 'encomiendas' => [1, 1, 1, 0],
                 'ventas' => [1, 1, 0, 0], 'pagos' => [1, 1, 0, 0], 'facturas' => [1, 0, 0, 0],
-                'reportes' => [1, 0, 0, 0], 'permisos' => [0, 0, 0, 0], 'bitacora' => [0, 0, 0, 0],
+                'reportes' => [1, 0, 0, 0], 'estadisticas' => [0, 0, 0, 0], 'permisos' => [0, 0, 0, 0], 'bitacora' => [0, 0, 0, 0],
             ],
             'cliente' => [
                 'usuarios' => [0, 0, 0, 0], 'catalogo' => [0, 0, 0, 0], 'almacenes' => [0, 0, 0, 0],
                 'inventario' => [0, 0, 0, 0], 'cotizaciones' => [1, 0, 0, 0], 'encomiendas' => [1, 0, 0, 0],
                 'ventas' => [0, 0, 0, 0], 'pagos' => [1, 1, 0, 0], 'facturas' => [1, 0, 0, 0],
-                'reportes' => [0, 0, 0, 0], 'permisos' => [0, 0, 0, 0], 'bitacora' => [0, 0, 0, 0],
+                'reportes' => [0, 0, 0, 0], 'estadisticas' => [0, 0, 0, 0], 'permisos' => [0, 0, 0, 0], 'bitacora' => [0, 0, 0, 0],
             ],
         ];
         foreach ($matriz as $rol => $recs) {
@@ -137,5 +138,8 @@ class DatabaseSeeder extends Seeder
             ['usuario_id' => $vendedor->id, 'alias' => 'Caja efectivo sucursal'],
             ['tipo' => 'EFECTIVO', 'referencia' => 'caja-1', 'activo' => true]
         );
+
+        // Datos de prueba para reportes y estadísticas (idempotente).
+        $this->call(DemoDatosSeeder::class);
     }
 }

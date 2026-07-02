@@ -3,8 +3,8 @@ import { ref, onMounted, computed } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import {
   Users, Package, Warehouse, Boxes, FileText, Truck, ShoppingCart,
-  CreditCard, Receipt, BarChart3, Shield, ScrollText,
-  Search, LogOut, Sun, Moon, Baby, Sparkles, Type, Contrast, Settings, LayoutDashboard,
+  CreditCard, Receipt, BarChart3, PieChart, Shield, ScrollText,
+  Search, LogOut, Sun, Moon, Baby, Sparkles, Type, Contrast, Settings, LayoutDashboard, User,
 } from 'lucide-vue-next';
 import { useAuth } from '../servicios/useAuth';
 import { api, getToken } from '../servicios/useApi';
@@ -16,7 +16,7 @@ const { sesion, logout, refrescar, autenticado } = useAuth();
 
 const iconos = {
   Users, Package, Warehouse, Boxes, FileText, Truck, ShoppingCart,
-  CreditCard, Receipt, BarChart3, Shield, ScrollText,
+  CreditCard, Receipt, BarChart3, PieChart, Shield, ScrollText,
 };
 
 const rutaActual = computed(() => stripBase(window.location.pathname).replace(/^\//, '') || 'inicio');
@@ -26,6 +26,12 @@ const iniciales = computed(() => {
   const n = sesion.usuario?.nombre || '';
   const a = sesion.usuario?.apellido || '';
   return ((n[0] || '') + (a[0] || n[1] || '')).toUpperCase() || 'U';
+});
+
+// Foto de perfil (ruta estática dentro de public/); si no hay, se usan las iniciales.
+const fotoUrl = computed(() => {
+  const f = sesion.usuario?.foto;
+  return f ? withBase('/' + f) : null;
 });
 
 // Breadcrumb (elemento de navegación)
@@ -166,7 +172,10 @@ onMounted(async () => {
       <!-- Panel de navegación con secciones nombradas -->
       <aside class="sidebar">
         <div class="perfil">
-          <div class="avatar">{{ iniciales }}</div>
+          <div class="avatar">
+            <img v-if="fotoUrl" :src="fotoUrl" alt="Foto de perfil" class="avatar-img" />
+            <template v-else>{{ iniciales }}</template>
+          </div>
           <div style="min-width:0">
             <div class="perfil-nombre">{{ sesion.usuario?.nombre }}</div>
             <div class="perfil-correo">{{ sesion.usuario?.correo }}</div>
@@ -178,6 +187,9 @@ onMounted(async () => {
         <nav class="nav">
           <Link :href="withBase('/inicio')" :class="{ activo: rutaActual === 'inicio' }">
             <LayoutDashboard :size="18" /> Inicio
+          </Link>
+          <Link :href="withBase('/perfil')" :class="{ activo: rutaActual === 'perfil' }">
+            <User :size="18" /> Mi Perfil
           </Link>
           <Link v-for="item in sesion.menu" :key="item.clave" :href="withBase('/' + item.ruta)"
                 :class="{ activo: rutaActual === item.ruta }">
@@ -234,3 +246,14 @@ onMounted(async () => {
     <ConfirmDialog />
   </div>
 </template>
+
+<style scoped>
+.avatar { overflow: hidden; }
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  display: block;
+}
+</style>

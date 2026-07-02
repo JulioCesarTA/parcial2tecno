@@ -12,16 +12,19 @@ class RegistrarBitacora
     {
         $response = $next($request);
 
-        // Registra el acceso al recurso (para "recursos más accedidos")
+        // Aquí solo se audita la DESCARGA de PDF. Las acciones de negocio
+        // (crear/editar/eliminar) las registran los propios servicios con su
+        // detalle descriptivo, así que no se duplican; y las consultas (GET)
+        // no se auditan.
         $usuario = $request->user();
-        if ($usuario) {
-            $segmentos = $request->segments(); // ['api','cotizaciones',...]
+        if ($usuario && str_contains($request->path(), '/pdf')) {
+            $segmentos = $request->segments(); // ['api','reportes','ventas','pdf']
             $recurso = $segmentos[1] ?? ($segmentos[0] ?? 'root');
             BitacoraService::registrar(
                 $usuario->id,
                 'acceso_recurso',
                 $recurso,
-                $request->method() . ' /' . $request->path(),
+                'Descargar PDF',
                 $request
             );
         }
