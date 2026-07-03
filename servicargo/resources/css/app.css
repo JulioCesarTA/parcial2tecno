@@ -379,8 +379,7 @@ a:hover { text-decoration: underline; }
 .shell.sidebar-colapsado .sidebar-perfil-info,
 .shell.sidebar-colapsado .nav-label,
 .shell.sidebar-colapsado .nav-item-texto { display: none; }
-.shell.sidebar-colapsado .sidebar-top { justify-content: center; }
-.shell.sidebar-colapsado .sidebar-toggle { display: none; }
+.shell.sidebar-colapsado .sidebar-top { flex-direction: column; justify-content: center; gap: 10px; padding: 4px 0 12px; }
 .shell.sidebar-colapsado .sidebar-perfil { justify-content: center; padding: 8px; }
 .shell.sidebar-colapsado .nav-item { justify-content: center; padding: 11px; gap: 0; }
 
