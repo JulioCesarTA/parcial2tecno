@@ -31,7 +31,11 @@ function vacio() {
 }
 
 async function cargar() {
-  lista.value = await api('/cotizaciones');
+  try {
+    lista.value = await api('/cotizaciones');
+  } catch (e) {
+    toast.error(e.message);
+  }
 }
 onMounted(async () => {
   await cargar();

@@ -16,10 +16,19 @@ use Illuminate\Support\Facades\DB;
  */
 class CotizacionService
 {
-    /** Elimina cotizaciones PENDIENTES vencidas (cabecera + detalle por cascade). */
+    /**
+     * Elimina cotizaciones PENDIENTES vencidas (cabecera + detalle por cascade).
+     *
+     * Excluye las que ya tienen una encomienda enganchada: en el flujo normal eso
+     * no pasa (generar la encomienda deja la cotización COMPLETADA), pero datos
+     * inconsistentes (p. ej. de un seeder de demo mal armado) podían dejar una
+     * PENDIENTE con encomienda y tirar abajo *todo* el listado con una violación
+     * de llave foránea. Mejor ignorar esa fila que romper la página entera.
+     */
     public function limpiarVencidas(): void
     {
         Cotizacion::where('estado', 'PENDIENTE')
+            ->whereDoesntHave('encomienda')
             ->whereRaw("fecha_emision + (validez_dias || ' days')::interval < now()")
             ->delete();
     }

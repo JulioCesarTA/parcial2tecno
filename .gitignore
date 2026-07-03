@@ -1,5 +1,6 @@
 composer.phar
 .DS_Store
 documentacion/
+laravel.log
 modelo.md
 prompt.md

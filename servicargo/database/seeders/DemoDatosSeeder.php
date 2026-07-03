@@ -82,8 +82,10 @@ class DemoDatosSeeder extends Seeder
                 'validez_dias' => 7,
             ]);
 
-            // Las RECHAZADAS quedan solo como cotización.
-            if ($cot->estado === 'RECHAZADA') {
+            // Solo una cotización APROBADA/COMPLETADA puede tener encomienda (regla
+            // real de EncomiendaService::crear). RECHAZADA y PENDIENTE quedan solo
+            // como cotización, para no dejar una PENDIENTE con encomienda enganchada.
+            if (! in_array($cot->estado, ['APROBADA', 'COMPLETADA'], true)) {
                 continue;
             }
 
