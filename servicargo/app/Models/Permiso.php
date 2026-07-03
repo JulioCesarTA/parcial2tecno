@@ -19,4 +19,5 @@ class Permiso extends Model
     ];
 
     public function recurso() { return $this->belongsTo(Recurso::class, 'recurso_id'); }
+    public function rolCatalogo() { return $this->belongsTo(Rol::class, 'rol', 'clave'); }
 }

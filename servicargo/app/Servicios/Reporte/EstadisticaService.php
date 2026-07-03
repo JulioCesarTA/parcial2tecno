@@ -99,10 +99,15 @@ class EstadisticaService
             ->toArray();
     }
 
-    /** Páginas con más visitas (contador único por página). */
+    /** Páginas con más visitas, sumando entre todos los usuarios (ahora cada uno tiene su propio contador). */
     public function paginasMasVisitadas(): array
     {
-        return Visita::orderByDesc('contador')->limit(10)->get()->toArray();
+        return Visita::select('pagina', DB::raw('SUM(contador) as contador'))
+            ->groupBy('pagina')
+            ->orderByDesc('contador')
+            ->limit(10)
+            ->get()
+            ->toArray();
     }
 
     /** Recursos internos más accedidos (de la bitácora). */

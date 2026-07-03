@@ -52,4 +52,16 @@ class Usuario extends Authenticatable
     {
         return $this->hasMany(Cotizacion::class, 'cliente_id');
     }
+
+    // Nombrada distinto de "rol" (columna de texto usada en todo el sistema)
+    // para no pisarla: esta es la fila del catálogo, no el string.
+    public function rolCatalogo()
+    {
+        return $this->belongsTo(Rol::class, 'rol', 'clave');
+    }
+
+    public function visitas()
+    {
+        return $this->hasMany(Visita::class, 'usuario_id');
+    }
 }

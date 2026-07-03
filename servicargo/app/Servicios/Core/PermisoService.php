@@ -4,6 +4,7 @@ namespace App\Servicios\Core;
 
 use App\Models\Permiso;
 use App\Models\Recurso;
+use App\Models\Rol;
 use App\Support\BitacoraService;
 
 /**
@@ -16,7 +17,7 @@ class PermisoService
     {
         return [
             'recursos' => Recurso::orderBy('orden')->get(),
-            'roles' => ['admin', 'asesor', 'cliente'],
+            'roles' => Rol::orderBy('orden')->pluck('clave')->all(),
             'permisos' => Permiso::all(),
         ];
     }
