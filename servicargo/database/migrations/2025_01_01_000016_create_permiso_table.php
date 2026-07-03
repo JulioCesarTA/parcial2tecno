@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('permiso', function (Blueprint $table) {
             $table->id();
-            $table->string('rol', 30); // admin | vendedor | cliente
+            $table->string('rol', 30); // admin | asesor | cliente
             $table->foreignId('recurso_id')->constrained('recurso')->cascadeOnDelete();
             $table->boolean('ver')->default(false);
             $table->boolean('crear')->default(false);

@@ -3,7 +3,9 @@ import { ref, onMounted, computed } from 'vue';
 import KpiCard from '../KpiCard.vue';
 import { api } from '../../servicios/useApi';
 import { withBase } from '../../servicios/useBase';
+import { useToast } from '../../servicios/useUI';
 
+const toast = useToast();
 const cotizaciones = ref([]);
 const encomiendas = ref([]);
 const facturas = ref([]);
@@ -17,9 +19,13 @@ const enCamino = computed(() => encomiendas.value.filter((e) => e.estado !== 'EN
 const totalFacturado = computed(() => facturas.value.reduce((s, f) => s + Number(f.total || 0), 0));
 
 onMounted(async () => {
-  try { cotizaciones.value = await api('/cotizaciones'); } catch (e) {}
-  try { encomiendas.value = await api('/encomiendas'); } catch (e) {}
-  try { facturas.value = await api('/facturas'); } catch (e) {}
+  // Cargamos cada bloque por separado (si uno falla, los demás igual se muestran)
+  // y avisamos una sola vez si algo no se pudo cargar.
+  let fallo = null;
+  try { cotizaciones.value = await api('/cotizaciones'); } catch (e) { fallo = fallo || e; }
+  try { encomiendas.value = await api('/encomiendas'); } catch (e) { fallo = fallo || e; }
+  try { facturas.value = await api('/facturas'); } catch (e) { fallo = fallo || e; }
+  if (fallo) toast.error('No se pudieron cargar algunos datos del panel. ' + fallo.message);
 });
 </script>
 

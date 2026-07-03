@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Servicios\Comercial\EncomiendaService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class EncomiendaController extends Controller
@@ -17,6 +18,18 @@ class EncomiendaController extends Controller
     public function show(Request $request, $id)
     {
         return response()->json($this->encomiendas->obtenerPara($request->user(), $id));
+    }
+
+    public function pdf(Request $request, $id)
+    {
+        $enc = $this->encomiendas->obtenerPara($request->user(), $id);
+
+        $pdf = Pdf::loadView('reportes.encomienda', [
+            'encomienda' => $enc,
+            'fecha' => now()->format('d/m/Y H:i'),
+        ]);
+
+        return $pdf->download("encomienda-{$enc->guia_rastreo}.pdf");
     }
 
     public function store(Request $request)

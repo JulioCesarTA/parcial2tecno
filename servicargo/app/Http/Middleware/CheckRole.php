@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class CheckRole
 {
-    /** Uso: ->middleware('rol:admin,vendedor') */
+    /** Uso: ->middleware('rol:admin,asesor') */
     public function handle(Request $request, Closure $next, ...$roles)
     {
         $usuario = $request->user();

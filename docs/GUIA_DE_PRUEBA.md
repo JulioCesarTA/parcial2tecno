@@ -18,10 +18,10 @@ Contraseña de **todos**: `password`
 | Rol | Correo | ¿Se auto-registra? |
 |-----|--------|--------------------|
 | **Administrador** (admin total) | `admin@servicargo.bo` | No |
-| **Vendedor** | `vendedor@servicargo.bo` | No |
+| **Asesor** | `asesor@servicargo.bo` | No |
 | **Cliente** | `cliente@servicargo.bo` | Sí (`/registro` es público) |
 
-> Solo el **Cliente** puede crearse cuenta solo. El personal (admin/vendedor) lo da de alta
+> Solo el **Cliente** puede crearse cuenta solo. El personal (admin/asesor) lo da de alta
 > el Administrador en **Usuarios** (`/usuarios`).
 
 El flujo del negocio es:
@@ -31,8 +31,8 @@ El flujo del negocio es:
 
 ## Flujo completo (pago CONTADO con QR)
 
-### Paso 1 — VENDEDOR: crea la cotización
-1. Entrá como **`vendedor@servicargo.bo`**.
+### Paso 1 — ASESOR: crea la cotización
+1. Entrá como **`asesor@servicargo.bo`**.
 2. Andá a **Cotizaciones** (`/cotizaciones`) → **+ Nueva cotización**.
 3. Completá:
    - **Cliente** (ej. Carla Cliente), **Tipo de envío** (terrestre/aéreo/marítimo).
@@ -53,22 +53,22 @@ El flujo del negocio es:
 3. En la cotización `PENDIENTE`: **Ver** para revisar el detalle, luego **Aprobar**
    (o **Rechazar**).
    - ✅ Al aprobar, pasa a **`APROBADA`** y se abre la **ventana de 20 min** para que el
-     vendedor que la atendió genere la encomienda.
+     asesor que la atendió genere la encomienda.
 4. **Cerrá sesión.**
 
-### Paso 3 — VENDEDOR: genera la encomienda
-1. Entrá como **`vendedor@servicargo.bo`**.
+### Paso 3 — ASESOR: genera la encomienda
+1. Entrá como **`asesor@servicargo.bo`**.
 2. En **Cotizaciones**, sobre la fila `APROBADA`: **Generar encomienda**.
    - ✅ Se crea la **encomienda** (estado `REGISTRADA`) con la **guía de rastreo**, copiando
      los datos del envío. La cotización pasa a **`COMPLETADA`**.
-   - ⏱️ **Ventana de 20 min:** durante los primeros 20 min solo puede generarla el vendedor
-     que atendió la cotización (o un admin). Pasado ese tiempo, cualquier vendedor.
+   - ⏱️ **Ventana de 20 min:** durante los primeros 20 min solo puede generarla el asesor
+     que atendió la cotización (o un admin). Pasado ese tiempo, cualquier asesor.
 3. *(Opcional)* Andá a **Encomiendas** (`/encomiendas`) → **Gestionar** para mover el estado
    (`REGISTRADA → EN_TRANSITO → ENTREGADA`). Cada cambio queda en el **historial**.
 4. **Cerrá sesión.**
 
-### Paso 4 — VENDEDOR: crea la nota de venta (cobro)
-1. Seguí como **`vendedor@servicargo.bo`** (o entrá de nuevo).
+### Paso 4 — ASESOR: crea la nota de venta (cobro)
+1. Seguí como **`asesor@servicargo.bo`** (o entrá de nuevo).
 2. Andá a **Ventas** (`/ventas`) → **+ Nueva nota de venta**.
 3. Elegí la **Encomienda** (autocompleta el cliente), definí **Impuestos/Descuento** y el
    **Tipo de pago = Contado**.
@@ -101,7 +101,7 @@ El flujo del negocio es:
 
 ## Variación A — Pago a CRÉDITO (en cuotas)
 
-- En el **Paso 4**, el vendedor crea la venta como **Crédito** e indica **N.º de cuotas ≥ 2**.
+- En el **Paso 4**, el asesor crea la venta como **Crédito** e indica **N.º de cuotas ≥ 2**.
 - En el **Paso 5**, el cliente en **Pagos** paga un **monto parcial** con su **método QR
   registrado**:
   - Si querés, indicá el **N.º de cuota** en el modal.
@@ -109,17 +109,17 @@ El flujo del negocio es:
 - Repetí el pago QR hasta cubrir el **total**: cuando `total_pagado ≥ total_final`, la venta
   pasa a **`PAGADA`**. Cada pago genera **su propia factura**.
 
-## Variación B — Cobro en EFECTIVO (lo registra el vendedor)
+## Variación B — Cobro en EFECTIVO (lo registra el asesor)
 
-- El **cliente solo puede pagar con QR**. Para **efectivo**, lo registra un **vendedor/admin**:
-  1. Entrá como **`vendedor@servicargo.bo`** → **Pagos** (`/pagos`).
+- El **cliente solo puede pagar con QR**. Para **efectivo**, lo registra un **asesor/admin**:
+  1. Entrá como **`asesor@servicargo.bo`** → **Pagos** (`/pagos`).
   2. **Pagar** sobre la venta → método **Efectivo** → **Registrar pago**.
   - ✅ El pago se registra de inmediato (sin QR), se emite la factura y se actualiza el estado.
 
 ## Variación C — Seguimiento del envío (cliente)
 
 - El **cliente** entra a **Encomiendas** (`/encomiendas`) → **Seguimiento** y ve la **guía de
-  rastreo** y el **historial de estados** que va registrando el vendedor.
+  rastreo** y el **historial de estados** que va registrando el asesor.
 
 ---
 
@@ -136,15 +136,15 @@ El flujo del negocio es:
 
 | Paso | Actor | Dónde |
 |------|-------|-------|
-| Crear cotización | Vendedor / Admin | `/cotizaciones` → + Nueva cotización |
+| Crear cotización | Asesor / Admin | `/cotizaciones` → + Nueva cotización |
 | Aprobar / Rechazar cotización | **Cliente** (las suyas) | `/cotizaciones` |
-| Generar encomienda (ventana 20 min) | Vendedor / Admin | `/cotizaciones` → Generar encomienda |
-| Mover estado del envío | Vendedor / Admin | `/encomiendas` → Gestionar |
-| Crear nota de venta (cobro) | Vendedor / Admin | `/ventas` → + Nueva nota de venta |
-| Registrar método de pago | Cliente / Vendedor / Admin | `/pagos` → Mis métodos de pago |
+| Generar encomienda (ventana 20 min) | Asesor / Admin | `/cotizaciones` → Generar encomienda |
+| Mover estado del envío | Asesor / Admin | `/encomiendas` → Gestionar |
+| Crear nota de venta (cobro) | Asesor / Admin | `/ventas` → + Nueva nota de venta |
+| Registrar método de pago | Cliente / Asesor / Admin | `/pagos` → Mis métodos de pago |
 | Pagar con QR | **Cliente** | `/pagos` |
-| Cobrar en efectivo | Vendedor / Admin | `/pagos` |
-| Ver facturas | Cliente / Vendedor / Admin | `/facturas` |
+| Cobrar en efectivo | Asesor / Admin | `/pagos` |
+| Ver facturas | Cliente / Asesor / Admin | `/facturas` |
 
 ---
 
@@ -153,10 +153,10 @@ El flujo del negocio es:
 | Módulo | Ruta | Rol |
 |--------|------|-----|
 | Usuarios (alta de personal) | `/usuarios` | Admin |
-| Catálogo (categorías + productos) | `/catalogo` | Admin (crea) · Vendedor (ve) |
+| Catálogo (categorías + productos) | `/catalogo` | Admin (crea) · Asesor (ve) |
 | Almacenes | `/almacenes` | Admin |
-| Inventario (movimientos INGRESO/SALIDA) | `/inventario` | Admin · Vendedor |
-| Reportes + export **PDF** | `/reportes` | Admin (todos) · Vendedor (la mayoría) |
+| Inventario (movimientos INGRESO/SALIDA) | `/inventario` | Admin · Asesor |
+| Reportes + export **PDF** | `/reportes` | Admin (todos) · Asesor (la mayoría) |
 | Matriz de Acceso (rol × recurso) | `/permisos` | Admin |
 | Bitácora (auditoría) | `/bitacora` | Admin |
 

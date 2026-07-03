@@ -58,7 +58,7 @@ Route::middleware(['jwt', 'bitacora'])->group(function () {
     });
 
     // Categorías
-    Route::middleware('rol:admin,vendedor')->group(function () {
+    Route::middleware('rol:admin,asesor')->group(function () {
         Route::get('/categorias', [CategoriaController::class, 'index']);
         Route::get('/categorias/{id}', [CategoriaController::class, 'show']);
     });
@@ -69,7 +69,7 @@ Route::middleware(['jwt', 'bitacora'])->group(function () {
     });
 
     // Productos
-    Route::middleware('rol:admin,vendedor')->group(function () {
+    Route::middleware('rol:admin,asesor')->group(function () {
         Route::get('/productos', [ProductoController::class, 'index']);
         Route::get('/productos/{codigo}', [ProductoController::class, 'show']);
     });
@@ -88,18 +88,25 @@ Route::middleware(['jwt', 'bitacora'])->group(function () {
         Route::delete('/almacenes/{id}', [AlmacenController::class, 'destroy']);
     });
 
-    // Inventario (admin, vendedor)
-    Route::middleware('rol:admin,vendedor')->group(function () {
+    // Inventario (admin, asesor)
+    Route::middleware('rol:admin,asesor')->group(function () {
         Route::get('/inventario', [InventarioController::class, 'index']);
         Route::post('/inventario/movimiento', [InventarioController::class, 'movimiento']);
     });
 
     // Cotizaciones
+    // Ruta literal "solicitudes" antes de "{id}" para que no se la trague el wildcard.
+    Route::get('/cotizaciones/solicitudes', [CotizacionController::class, 'solicitudesPendientes'])->middleware('rol:admin,asesor');
     Route::get('/cotizaciones', [CotizacionController::class, 'index']); // cliente filtrado en controller
     Route::get('/cotizaciones/{id}', [CotizacionController::class, 'show']);
-    Route::middleware('rol:admin,vendedor')->group(function () {
+    Route::get('/cotizaciones/{id}/pdf', [CotizacionController::class, 'pdf']);
+    Route::post('/cotizaciones/solicitar', [CotizacionController::class, 'solicitar'])->middleware('rol:cliente');
+    Route::middleware('rol:admin,asesor')->group(function () {
         Route::post('/cotizaciones', [CotizacionController::class, 'store']);
         Route::put('/cotizaciones/{id}', [CotizacionController::class, 'update']);
+        Route::post('/cotizaciones/{id}/productos', [CotizacionController::class, 'agregarProducto']);
+        Route::put('/cotizaciones/{id}/productos/{productoId}', [CotizacionController::class, 'actualizarProducto']);
+        Route::delete('/cotizaciones/{id}/productos/{productoId}', [CotizacionController::class, 'eliminarProducto']);
     });
     Route::delete('/cotizaciones/{id}', [CotizacionController::class, 'destroy'])->middleware('rol:admin');
     Route::post('/cotizaciones/{id}/aprobar', [CotizacionController::class, 'aprobar'])->middleware('rol:cliente');
@@ -107,7 +114,8 @@ Route::middleware(['jwt', 'bitacora'])->group(function () {
     // Encomiendas
     Route::get('/encomiendas', [EncomiendaController::class, 'index']);
     Route::get('/encomiendas/{id}', [EncomiendaController::class, 'show']);
-    Route::middleware('rol:admin,vendedor')->group(function () {
+    Route::get('/encomiendas/{id}/pdf', [EncomiendaController::class, 'pdf']);
+    Route::middleware('rol:admin,asesor')->group(function () {
         Route::post('/encomiendas', [EncomiendaController::class, 'store']);
         Route::put('/encomiendas/{id}', [EncomiendaController::class, 'update']);
     });
@@ -115,7 +123,8 @@ Route::middleware(['jwt', 'bitacora'])->group(function () {
     // Ventas
     Route::get('/ventas', [VentaController::class, 'index']);
     Route::get('/ventas/{id}', [VentaController::class, 'show']);
-    Route::post('/ventas', [VentaController::class, 'store'])->middleware('rol:admin,vendedor');
+    Route::post('/ventas', [VentaController::class, 'store'])->middleware('rol:admin,asesor');
+    Route::post('/ventas/solicitar', [VentaController::class, 'solicitar'])->middleware('rol:cliente');
 
     // Métodos de pago (registro por usuario)
     Route::get('/metodos-pago', [MetodoPagoController::class, 'index']);
@@ -126,15 +135,17 @@ Route::middleware(['jwt', 'bitacora'])->group(function () {
     // Pagos
     Route::get('/pagos', [PagoController::class, 'index']);
     Route::post('/pagos', [PagoController::class, 'registrar']);
+    Route::get('/pagos/historial/pdf', [PagoController::class, 'historialPdf']);
     Route::get('/pagos/{pago}/estado-qr', [PagoController::class, 'estadoQr']);
     Route::get('/ventas/{venta}/qr-activo', [PagoController::class, 'qrActivo']);
 
     // Facturas
     Route::get('/facturas', [FacturaController::class, 'index']);
     Route::get('/facturas/{id}', [FacturaController::class, 'show']);
+    Route::get('/facturas/{id}/pdf', [FacturaController::class, 'pdf']);
 
     // Reportes
-    Route::middleware('rol:admin,vendedor')->group(function () {
+    Route::middleware('rol:admin,asesor')->group(function () {
         Route::get('/reportes/ventas', [ReporteController::class, 'ventas']);
         Route::get('/reportes/encomiendas', [ReporteController::class, 'encomiendas']);
         Route::get('/reportes/cotizaciones', [ReporteController::class, 'cotizaciones']);

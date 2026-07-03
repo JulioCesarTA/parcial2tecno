@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('apellido', 100);
             $table->string('correo', 120)->unique();
             $table->string('contrasena', 120);
-            $table->string('rol', 30); // admin | vendedor | cliente
+            $table->string('rol', 30); // admin | asesor | cliente
             $table->string('telefono', 30)->nullable();
         });
     }

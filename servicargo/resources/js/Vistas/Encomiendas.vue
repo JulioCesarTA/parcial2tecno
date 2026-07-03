@@ -1,9 +1,12 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import AppLayout from '../Plantillas/AppLayout.vue';
+import BuscadorLista from '../Componentes/BuscadorLista.vue';
 import { api } from '../servicios/useApi';
 import { useAuth } from '../servicios/useAuth';
 import { useToast } from '../servicios/useUI';
+import { coincide } from '../servicios/texto';
+import { descargarPdf } from '../servicios/descargarArchivo';
 
 const { sesion } = useAuth();
 const toast = useToast();
@@ -16,10 +19,18 @@ const nuevoEstado = ref('');
 const obs = ref('');
 const estados = ['REGISTRADA', 'EN_TRANSITO', 'EN_DISTRIBUCION', 'ENTREGADA', 'DEVUELTA'];
 
-async function cargar() { lista.value = await api('/encomiendas'); }
+async function cargar() {
+  try { lista.value = await api('/encomiendas'); }
+  catch (e) { toast.error(e.message); }
+}
 onMounted(cargar);
 
-async function ver(e) { detalle.value = await api('/encomiendas/' + e.id); nuevoEstado.value = detalle.value.estado; obs.value = ''; modal.value = true; }
+async function ver(e) {
+  try {
+    detalle.value = await api('/encomiendas/' + e.id);
+    nuevoEstado.value = detalle.value.estado; obs.value = ''; modal.value = true;
+  } catch (e) { toast.error(e.message); }
+}
 
 async function cambiarEstado() {
   try {
@@ -33,6 +44,34 @@ async function cambiarEstado() {
 function badge(e) {
   return { REGISTRADA: 'info', EN_TRANSITO: 'aviso', EN_DISTRIBUCION: 'aviso', ENTREGADA: 'exito', DEVUELTA: 'error' }[e] || '';
 }
+
+async function descargarEncomiendaPdf(e) {
+  try { await descargarPdf(`/encomiendas/${e.id}/pdf`, `encomienda-${e.guia_rastreo}.pdf`); }
+  catch (err) { toast.error(err.message); }
+}
+
+/* ---------- Buscador + filtro ---------- */
+const q = ref('');
+const filtroEstado = ref('');
+
+function textoBusqueda(e) {
+  return `${e.guia_rastreo} ${e.cliente?.nombre || ''} ${e.cliente?.apellido || ''} ${e.origen} ${e.destino} ${e.tipo_envio}`;
+}
+const listaFiltrada = computed(() => lista.value.filter((e) => (
+  (!filtroEstado.value || e.estado === filtroEstado.value) && coincide(textoBusqueda(e), q.value)
+)));
+const sugerencias = computed(() => {
+  if (!q.value.trim()) return [];
+  return lista.value
+    .filter((e) => coincide(textoBusqueda(e), q.value))
+    .slice(0, 6)
+    .map((e) => ({
+      id: e.id,
+      titulo: `Guía ${e.guia_rastreo}`,
+      subtitulo: `${e.origen} → ${e.destino} · ${e.estado}`,
+    }));
+});
+function elegirSugerencia(s) { q.value = s.titulo.replace('Guía ', ''); }
 </script>
 
 <template>
@@ -40,18 +79,33 @@ function badge(e) {
     <h1 class="titulo-pagina">Encomiendas</h1>
     <p class="subtitulo">{{ esCliente ? 'Seguimiento de tus envíos' : 'Envíos y trazabilidad' }}</p>
     <div class="card">
+      <div class="fila-acciones" style="margin-bottom:14px; flex-wrap:wrap">
+        <BuscadorLista
+          v-model="q"
+          placeholder="Buscar por guía, cliente o destino…"
+          :sugerencias="sugerencias"
+          @elegir="elegirSugerencia"
+        />
+        <select class="input" style="max-width:190px" v-model="filtroEstado">
+          <option value="">Todos los estados</option>
+          <option v-for="s in estados" :key="s" :value="s">{{ s }}</option>
+        </select>
+      </div>
       <table>
         <thead><tr><th>Guía</th><th>Cliente</th><th>Destino</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>
         <tbody>
-          <tr v-for="e in lista" :key="e.id">
+          <tr v-for="e in listaFiltrada" :key="e.id">
             <td><strong>{{ e.guia_rastreo }}</strong></td>
             <td>{{ e.cliente?.nombre }}</td>
             <td>{{ e.origen }} → {{ e.destino }}</td>
             <td>{{ e.tipo_envio }}</td>
             <td><span class="badge" :class="badge(e.estado)">{{ e.estado }}</span></td>
-            <td><button class="btn chico secundario" @click="ver(e)">{{ esCliente ? 'Seguimiento' : 'Gestionar' }}</button></td>
+            <td class="fila-acciones">
+              <button class="btn chico secundario" @click="ver(e)">{{ esCliente ? 'Seguimiento' : 'Gestionar' }}</button>
+              <button class="btn chico secundario" @click="descargarEncomiendaPdf(e)">PDF</button>
+            </td>
           </tr>
-          <tr v-if="!lista.length"><td colspan="6" style="color:var(--color-texto-suave)">Sin encomiendas</td></tr>
+          <tr v-if="!listaFiltrada.length"><td colspan="6" style="color:var(--color-texto-suave)">{{ lista.length ? 'Sin resultados para ese filtro' : 'Sin encomiendas' }}</td></tr>
         </tbody>
       </table>
     </div>

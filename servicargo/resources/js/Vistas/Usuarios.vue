@@ -18,7 +18,9 @@ function vacio() {
 }
 
 async function cargar() {
-  lista.value = await api('/usuarios', { params: { rol: filtroRol.value } });
+  try {
+    lista.value = await api('/usuarios', { params: { rol: filtroRol.value } });
+  } catch (e) { toast.error(e.message); }
 }
 onMounted(cargar);
 
@@ -63,7 +65,7 @@ async function eliminar(u) {
         <select class="input" style="max-width:200px" v-model="filtroRol" @change="cargar">
           <option value="*">Todos los roles</option>
           <option value="admin">Admin</option>
-          <option value="vendedor">Vendedor</option>
+          <option value="asesor">Asesor</option>
           <option value="cliente">Cliente</option>
         </select>
         <button class="btn" @click="nuevo">+ Nuevo usuario</button>
@@ -100,7 +102,7 @@ async function eliminar(u) {
           </div>
           <label>Correo</label><input class="input" type="email" v-model="form.correo" /><div v-if="errores.correo" class="error-campo">{{ errores.correo[0] }}</div>
           <div class="grid grid-2">
-            <div><label>Rol</label><select class="input" v-model="form.rol"><option value="admin">Admin</option><option value="vendedor">Vendedor</option><option value="cliente">Cliente</option></select></div>
+            <div><label>Rol</label><select class="input" v-model="form.rol"><option value="admin">Admin</option><option value="asesor">Asesor</option><option value="cliente">Cliente</option></select></div>
             <div><label>Contraseña {{ editando ? '(dejar vacío = no cambiar)' : '' }}</label><input class="input" type="password" v-model="form.contrasena" /><div v-if="errores.contrasena" class="error-campo">{{ errores.contrasena[0] }}</div></div>
           </div>
           <div class="fila-acciones" style="justify-content:flex-end; margin-top:16px">

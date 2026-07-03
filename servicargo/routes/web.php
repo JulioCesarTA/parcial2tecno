@@ -29,6 +29,7 @@ Route::get('/catalogo', fn () => Inertia::render('Catalogo'))->name('catalogo');
 Route::get('/almacenes', fn () => Inertia::render('Almacenes'))->name('almacenes');
 Route::get('/inventario', fn () => Inertia::render('Inventario'))->name('inventario');
 Route::get('/cotizaciones', fn () => Inertia::render('Cotizaciones'))->name('cotizaciones');
+Route::get('/solicitudes', fn () => Inertia::render('Solicitudes'))->name('solicitudes');
 Route::get('/encomiendas', fn () => Inertia::render('Encomiendas'))->name('encomiendas');
 Route::get('/ventas', fn () => Inertia::render('Ventas'))->name('ventas');
 Route::get('/pagos', fn () => Inertia::render('Pagos'))->name('pagos');

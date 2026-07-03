@@ -14,8 +14,10 @@ const errores = ref({});
 const form = ref({ nombre: '', direccion: '', capacidad: '', responsable_id: '' });
 
 async function cargar() {
-  lista.value = await api('/almacenes');
-  usuarios.value = await api('/usuarios');
+  try {
+    lista.value = await api('/almacenes');
+    usuarios.value = await api('/usuarios');
+  } catch (e) { toast.error(e.message); }
 }
 onMounted(cargar);
 

@@ -17,4 +17,6 @@ class DetalleVenta extends Model
         'precio_unitario' => 'decimal:2',
         'subtotal' => 'decimal:2',
     ];
+
+    public function producto() { return $this->belongsTo(Producto::class, 'producto_id'); }
 }

@@ -18,7 +18,9 @@ class PreferenciaController extends Controller
     public function update(Request $request)
     {
         $datos = $request->validate([
-            'tema' => ['required', Rule::in(['auto', 'dia', 'noche', 'ninos', 'jovenes'])],
+            // Formato "persona:modo" (navy|nino|joven|adulto : auto|light|dark).
+            // Se toleran los valores antiguos (auto|dia|noche|ninos|jovenes) por compatibilidad.
+            'tema' => ['required', 'string', 'max:20', 'regex:/^((navy|nino|joven|adulto):(auto|light|dark)|auto|dia|noche|ninos|jovenes)$/'],
             'fuente' => ['required', Rule::in(['sm', 'md', 'lg'])],
             'contraste' => ['required', Rule::in(['normal', 'alto'])],
         ]);

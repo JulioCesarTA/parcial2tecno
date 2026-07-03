@@ -1,9 +1,12 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import AppLayout from '../Plantillas/AppLayout.vue';
+import BuscadorLista from '../Componentes/BuscadorLista.vue';
 import { api } from '../servicios/useApi';
 import { useAuth } from '../servicios/useAuth';
 import { useToast } from '../servicios/useUI';
+import { coincide } from '../servicios/texto';
+import { descargarPdf } from '../servicios/descargarArchivo';
 
 const { sesion } = useAuth();
 const toast = useToast();
@@ -15,16 +18,24 @@ const pagos = ref([]);
 const modal = ref(false);
 const ventaSel = ref(null);
 const form = ref({ monto: '', metodo_pago: 'QR', numero_cuota: '' });
+const esPagoTotal = ref(false); // true tras usar "Pago total": fuerza EFECTIVO (no aplica QR real)
 const qr = ref(null);            // { pago_id, qr_base64, expira_en }
 const esperandoQr = ref(false);  // polling en curso
 const qrVencido = ref(false);
 let pollTimer = null;
 
 async function cargar() {
-  ventas.value = (await api('/ventas')).filter((v) => v.estado !== 'PAGADA');
-  pagos.value = await api('/pagos');
+  try {
+    ventas.value = (await api('/ventas')).filter((v) => v.estado !== 'PAGADA');
+    pagos.value = await api('/pagos');
+  } catch (e) { toast.error(e.message); }
 }
 onMounted(cargar);
+
+async function descargarHistorialPdf() {
+  try { await descargarPdf('/pagos/historial/pdf', 'historial-pagos.pdf'); }
+  catch (e) { toast.error(e.message); }
+}
 
 /* ---------- Cálculos por venta ---------- */
 const num = (x) => Number(x || 0);
@@ -60,6 +71,52 @@ function saldoCuota(v, numeroCuota) {
   return Math.max(0, montoCuota(v) - pagadoCuota(v, numeroCuota));
 }
 
+/* ---------- Buscador + filtro: ventas por cobrar ---------- */
+const qVentas = ref('');
+const filtroTipoPagoVenta = ref('');
+const filtroEstadoVenta = ref('');
+const estadosVenta = ['PENDIENTE', 'PARCIAL'];
+
+function textoBusquedaVenta(v) {
+  return `${v.codigo} ${v.cliente?.nombre || ''} ${v.cliente?.apellido || ''}`;
+}
+const ventasFiltradas = computed(() => ventas.value.filter((v) => (
+  (!filtroTipoPagoVenta.value || v.tipo_pago === filtroTipoPagoVenta.value)
+  && (!filtroEstadoVenta.value || v.estado === filtroEstadoVenta.value)
+  && coincide(textoBusquedaVenta(v), qVentas.value)
+)));
+const sugerenciasVentas = computed(() => {
+  if (!qVentas.value.trim()) return [];
+  return ventas.value
+    .filter((v) => coincide(textoBusquedaVenta(v), qVentas.value))
+    .slice(0, 6)
+    .map((v) => ({ id: v.id, titulo: v.codigo, subtitulo: `Saldo Bs ${saldoDe(v).toFixed(2)} · ${v.estado}` }));
+});
+function elegirSugerenciaVenta(s) { qVentas.value = s.titulo; }
+
+/* ---------- Buscador + filtro: historial de pagos ---------- */
+const qHistorial = ref('');
+const filtroMetodoPago = ref('');
+const filtroEstadoPago = ref('');
+const estadosPago = ['REGISTRADO', 'PENDIENTE', 'EXPIRADO', 'ANULADO'];
+
+function textoBusquedaPago(p) {
+  return `${p.venta?.codigo || ''} ${p.metodo_pago}`;
+}
+const pagosFiltrados = computed(() => pagos.value.filter((p) => (
+  (!filtroMetodoPago.value || p.metodo_pago === filtroMetodoPago.value)
+  && (!filtroEstadoPago.value || p.estado === filtroEstadoPago.value)
+  && coincide(textoBusquedaPago(p), qHistorial.value)
+)));
+const sugerenciasHistorial = computed(() => {
+  if (!qHistorial.value.trim()) return [];
+  return pagos.value
+    .filter((p) => coincide(textoBusquedaPago(p), qHistorial.value))
+    .slice(0, 6)
+    .map((p) => ({ id: p.id, titulo: p.venta?.codigo || `Pago #${p.id}`, subtitulo: `Bs ${p.monto} · ${p.metodo_pago} · ${p.estado}` }));
+});
+function elegirSugerenciaHistorial(s) { qHistorial.value = s.titulo; }
+
 /* ---------- Pago total (solo admin): completa lo que falte para dejar
  * la venta (CONTADO) o la cuota seleccionada (CRÉDITO) como pagada. ---------- */
 function pagoTotal() {
@@ -83,6 +140,18 @@ function pagoTotal() {
     }
     form.value.monto = saldo.toFixed(2);
   }
+  // El pago total registra el saldo de una sola vez, como si ya se hubiera
+  // cobrado: no tiene sentido pasar por un QR real de PagoFácil, así que se
+  // fuerza EFECTIVO (que confirma al instante) para mantener la consistencia
+  // del saldo/estado de la venta.
+  form.value.metodo_pago = 'EFECTIVO';
+  esPagoTotal.value = true;
+}
+
+/* Si el admin edita el monto a mano tras usar "Pago total", vuelve a ser un
+ * pago parcial/normal: se libera la opción de pagar por QR. */
+function onMontoManual() {
+  esPagoTotal.value = false;
 }
 
 /* ---------- Abrir modal de pago ---------- */
@@ -93,6 +162,7 @@ function pagar(v) {
     metodo_pago: esCliente.value ? 'QR' : 'EFECTIVO',
     numero_cuota: '',
   };
+  esPagoTotal.value = false;
   qr.value = null;
   qrVencido.value = false;
   modal.value = true;
@@ -197,10 +267,27 @@ onUnmounted(detenerPolling);
 
     <div class="card">
       <h3>Ventas por cobrar</h3>
+      <div class="fila-acciones" style="margin-bottom:14px; flex-wrap:wrap">
+        <BuscadorLista
+          v-model="qVentas"
+          placeholder="Buscar por código o cliente…"
+          :sugerencias="sugerenciasVentas"
+          @elegir="elegirSugerenciaVenta"
+        />
+        <select class="input" style="max-width:170px" v-model="filtroTipoPagoVenta">
+          <option value="">Contado y crédito</option>
+          <option value="CONTADO">Contado</option>
+          <option value="CREDITO">Crédito</option>
+        </select>
+        <select class="input" style="max-width:170px" v-model="filtroEstadoVenta">
+          <option value="">Todos los estados</option>
+          <option v-for="e in estadosVenta" :key="e" :value="e">{{ e }}</option>
+        </select>
+      </div>
       <table>
         <thead><tr><th>Código</th><th>Total</th><th>Pagado</th><th>Saldo</th><th>Pago</th><th>Cuotas</th><th>Estado</th><th></th></tr></thead>
         <tbody>
-          <tr v-for="v in ventas" :key="v.id">
+          <tr v-for="v in ventasFiltradas" :key="v.id">
             <td>{{ v.codigo }}</td>
             <td>Bs {{ v.total_final }}</td>
             <td>Bs {{ pagadoDe(v).toFixed(2) }}</td>
@@ -213,22 +300,43 @@ onUnmounted(detenerPolling);
               <button v-if="tieneQrPendiente(v)" class="btn chico secundario" @click="verQr(v)">Ver QR</button>
             </td>
           </tr>
-          <tr v-if="!ventas.length"><td colspan="8" style="color:var(--color-texto-suave)">No hay ventas pendientes</td></tr>
+          <tr v-if="!ventasFiltradas.length"><td colspan="8" style="color:var(--color-texto-suave)">{{ ventas.length ? 'Sin resultados para ese filtro' : 'No hay ventas pendientes' }}</td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="card">
-      <h3>Historial de pagos</h3>
+      <div class="fila-acciones" style="justify-content:space-between; align-items:center">
+        <h3 style="margin:0">Historial de pagos</h3>
+        <button class="btn chico secundario" @click="descargarHistorialPdf">Descargar historial (PDF)</button>
+      </div>
+      <div class="fila-acciones" style="margin:14px 0; flex-wrap:wrap">
+        <BuscadorLista
+          v-model="qHistorial"
+          placeholder="Buscar por venta o método…"
+          :sugerencias="sugerenciasHistorial"
+          @elegir="elegirSugerenciaHistorial"
+        />
+        <select class="input" style="max-width:150px" v-model="filtroMetodoPago">
+          <option value="">Efectivo y QR</option>
+          <option value="EFECTIVO">Efectivo</option>
+          <option value="QR">QR</option>
+        </select>
+        <select class="input" style="max-width:170px" v-model="filtroEstadoPago">
+          <option value="">Todos los estados</option>
+          <option v-for="e in estadosPago" :key="e" :value="e">{{ e }}</option>
+        </select>
+      </div>
       <table>
         <thead><tr><th>#</th><th>Venta</th><th>Método</th><th>Monto</th><th>Cuota</th><th>Estado</th><th>Fecha</th></tr></thead>
         <tbody>
-          <tr v-for="p in pagos" :key="p.id">
+          <tr v-for="p in pagosFiltrados" :key="p.id">
             <td>{{ p.id }}</td><td>{{ p.venta?.codigo }}</td><td>{{ p.metodo_pago }}</td>
             <td>Bs {{ p.monto }}</td><td>{{ p.numero_cuota || '—' }}</td>
             <td><span class="badge" :class="p.estado==='REGISTRADO' ? 'exito':'aviso'">{{ p.estado }}</span></td>
             <td>{{ new Date(p.fecha_pago).toLocaleDateString() }}</td>
           </tr>
+          <tr v-if="!pagosFiltrados.length"><td colspan="7" style="color:var(--color-texto-suave)">{{ pagos.length ? 'Sin resultados para ese filtro' : 'Sin pagos registrados' }}</td></tr>
         </tbody>
       </table>
     </div>
@@ -251,12 +359,12 @@ onUnmounted(detenerPolling);
           <form @submit.prevent="registrar">
             <template v-if="ventaSel?.tipo_pago==='CREDITO'">
               <label>Nº de cuota (plan de pagos)</label>
-              <input class="input" type="number" min="1" :max="ventaSel?.numero_cuotas" v-model="form.numero_cuota" />
+              <input class="input" type="number" min="1" :max="ventaSel?.numero_cuotas" v-model="form.numero_cuota" @input="onMontoManual" />
             </template>
 
             <label>Monto a pagar (Bs)</label>
             <div class="fila-acciones" style="align-items:flex-start">
-              <input class="input" style="flex:1" type="number" step="0.01" min="0.01" v-model="form.monto" />
+              <input class="input" style="flex:1" type="number" step="0.01" min="0.01" v-model="form.monto" @input="onMontoManual" />
               <button v-if="esAdmin" type="button" class="btn chico secundario" @click="pagoTotal">Pago total</button>
             </div>
             <p style="color:var(--color-texto-suave); font-size:12px; margin:4px 0 0">
@@ -265,10 +373,13 @@ onUnmounted(detenerPolling);
             </p>
 
             <label>Tipo de pago</label>
-            <select class="input" v-model="form.metodo_pago" :disabled="esCliente">
+            <select class="input" v-model="form.metodo_pago" :disabled="esCliente || esPagoTotal">
               <option value="QR">QR</option>
               <option v-if="!esCliente" value="EFECTIVO">Efectivo</option>
             </select>
+            <p v-if="esPagoTotal" style="color:var(--color-texto-suave); font-size:12px; margin:4px 0 0">
+              Pago total registra el saldo como cobrado en Efectivo (un QR real necesitaría un pago real por la pasarela). Si editas el monto podrás volver a elegir QR.
+            </p>
             <p v-if="esCliente" style="color:var(--color-texto-suave); font-size:12px; margin:4px 0 0">
               Desde tu cuenta solo puedes pagar con QR. Para pagar en efectivo acude a la tienda.
             </p>

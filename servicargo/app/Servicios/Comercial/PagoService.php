@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\Log;
  * Métodos de pago (del pago):   EFECTIVO | QR.
  *
  * Quién registra el pago:
- *  - admin/vendedor: el cliente está físicamente en tienda → cualquier método
+ *  - admin/asesor: el cliente está físicamente en tienda → cualquier método
  *    (EFECTIVO o QR), sea contado o crédito.
  *  - cliente (desde casa): solo QR, sea contado o crédito.
  *
@@ -50,6 +50,42 @@ class PagoService
     }
 
     /**
+     * Estado de cuenta del actor: sus ventas con lo pagado/saldo pendiente de cada
+     * una, más el detalle de cada pago registrado. Base del PDF "Historial de pagos"
+     * (el cliente ve solo lo suyo; admin/asesor ven todo, igual que en la pantalla).
+     */
+    public function historialPara(Usuario $actor): array
+    {
+        $ventasQ = Venta::with(['cliente', 'pagos' => fn ($p) => $p->orderBy('fecha_pago')]);
+        if ($actor->esCliente()) {
+            $ventasQ->where('cliente_id', $actor->id);
+        }
+        $ventas = $ventasQ->orderByDesc('id')->get()->map(function (Venta $v) {
+            $pagado = (float) $v->pagos->where('estado', 'REGISTRADO')->sum('monto');
+
+            return [
+                'venta' => $v,
+                'pagado' => $pagado,
+                'saldo' => max(0, (float) $v->total_final - $pagado),
+            ];
+        });
+
+        $pagosQ = Pago::with('venta.cliente');
+        if ($actor->esCliente()) {
+            $pagosQ->whereHas('venta', fn ($v) => $v->where('cliente_id', $actor->id));
+        }
+        $pagos = $pagosQ->orderByDesc('fecha_pago')->get();
+
+        return [
+            'ventas' => $ventas,
+            'pagos' => $pagos,
+            'total_ventas' => (float) $ventas->sum(fn ($r) => (float) $r['venta']->total_final),
+            'total_pagado' => (float) $ventas->sum('pagado'),
+            'total_saldo' => (float) $ventas->sum('saldo'),
+        ];
+    }
+
+    /**
      * Registra un pago. EFECTIVO se confirma al instante y factura;
      * QR genera el código de PagoFácil y queda PENDIENTE hasta la confirmación.
      * Devuelve el payload listo para responder (con su 'message').
@@ -64,7 +100,7 @@ class PagoService
                 throw new ErrorDominio('No puedes pagar una venta ajena.', 403);
             }
             if ($datos['metodo_pago'] !== 'QR') {
-                throw new ErrorDominio('El cliente solo puede pagar con QR. Para EFECTIVO acude a un vendedor.', 422);
+                throw new ErrorDominio('El cliente solo puede pagar con QR. Para EFECTIVO acude a un asesor.', 422);
             }
         }
 

@@ -31,8 +31,10 @@ function vacioProd() {
 }
 
 async function cargar() {
-  categorias.value = await api('/categorias');
-  productos.value = await api('/productos');
+  try {
+    categorias.value = await api('/categorias');
+    productos.value = await api('/productos');
+  } catch (e) { toast.error(e.message); }
 }
 onMounted(cargar);
 

@@ -3,7 +3,9 @@ import { ref, onMounted, computed } from 'vue';
 import KpiCard from '../KpiCard.vue';
 import { api } from '../../servicios/useApi';
 import { withBase } from '../../servicios/useBase';
+import { useToast } from '../../servicios/useUI';
 
+const toast = useToast();
 const datos = ref(null);
 const cargando = ref(true);
 
@@ -19,8 +21,9 @@ const maxHora = computed(() => Math.max(1, ...pagosHora.value.map((p) => Number(
 const maxMetodo = computed(() => Math.max(1, ...porMetodo.value.map((m) => Number(m.monto))));
 
 onMounted(async () => {
-  try { datos.value = await api('/estadisticas'); } catch (e) { /* sin datos */ }
-  cargando.value = false;
+  try { datos.value = await api('/estadisticas'); }
+  catch (e) { toast.error('No se pudieron cargar las estadísticas. ' + e.message); }
+  finally { cargando.value = false; }
 });
 </script>
 

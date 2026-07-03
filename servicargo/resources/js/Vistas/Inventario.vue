@@ -14,12 +14,16 @@ const errores = ref({});
 const form = ref({ producto_id: '', almacen_id: '', cantidad: '', tipo: 'INGRESO' });
 
 async function cargar() {
-  lista.value = await api('/inventario', { params: { almacen_id: filtroAlmacen.value } });
+  try {
+    lista.value = await api('/inventario', { params: { almacen_id: filtroAlmacen.value } });
+  } catch (e) { toast.error(e.message); }
 }
 onMounted(async () => {
-  productos.value = await api('/productos');
-  almacenes.value = await api('/almacenes').catch(() => []);
-  cargar();
+  try {
+    productos.value = await api('/productos');
+    almacenes.value = await api('/almacenes').catch(() => []);
+    await cargar();
+  } catch (e) { toast.error(e.message); }
 });
 
 function nuevo() { form.value = { producto_id: '', almacen_id: '', cantidad: '', tipo: 'INGRESO' }; errores.value = {}; modal.value = true; }

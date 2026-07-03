@@ -43,7 +43,7 @@ class BuscarService
             'productos' => [],
         ];
 
-        // Productos solo para admin/vendedor
+        // Productos solo para admin/asesor
         if (! $actor->esCliente()) {
             $resultado['productos'] = Producto::where('nombre', 'ilike', "%{$q}%")
                 ->orWhere('codigo', 'ilike', "%{$q}%")

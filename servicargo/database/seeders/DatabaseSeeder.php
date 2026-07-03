@@ -26,14 +26,15 @@ class DatabaseSeeder extends Seeder
             ['clave' => 'almacenes', 'nombre' => 'Almacenes', 'icono' => 'Warehouse', 'ruta' => 'almacenes', 'orden' => 3],
             ['clave' => 'inventario', 'nombre' => 'Inventario', 'icono' => 'Boxes', 'ruta' => 'inventario', 'orden' => 4],
             ['clave' => 'cotizaciones', 'nombre' => 'Cotizaciones', 'icono' => 'FileText', 'ruta' => 'cotizaciones', 'orden' => 5],
-            ['clave' => 'encomiendas', 'nombre' => 'Encomiendas', 'icono' => 'Truck', 'ruta' => 'encomiendas', 'orden' => 6],
-            ['clave' => 'ventas', 'nombre' => 'Ventas', 'icono' => 'ShoppingCart', 'ruta' => 'ventas', 'orden' => 7],
-            ['clave' => 'pagos', 'nombre' => 'Pagos', 'icono' => 'CreditCard', 'ruta' => 'pagos', 'orden' => 8],
-            ['clave' => 'facturas', 'nombre' => 'Facturas', 'icono' => 'Receipt', 'ruta' => 'facturas', 'orden' => 9],
-            ['clave' => 'reportes', 'nombre' => 'Reportes', 'icono' => 'BarChart3', 'ruta' => 'reportes', 'orden' => 10],
-            ['clave' => 'estadisticas', 'nombre' => 'Estadísticas', 'icono' => 'PieChart', 'ruta' => 'estadisticas', 'orden' => 11],
-            ['clave' => 'permisos', 'nombre' => 'Matriz de Acceso', 'icono' => 'Shield', 'ruta' => 'permisos', 'orden' => 12],
-            ['clave' => 'bitacora', 'nombre' => 'Bitácora', 'icono' => 'ScrollText', 'ruta' => 'bitacora', 'orden' => 13],
+            ['clave' => 'solicitudes', 'nombre' => 'Solicitudes', 'icono' => 'Inbox', 'ruta' => 'solicitudes', 'orden' => 6],
+            ['clave' => 'encomiendas', 'nombre' => 'Encomiendas', 'icono' => 'Truck', 'ruta' => 'encomiendas', 'orden' => 7],
+            ['clave' => 'ventas', 'nombre' => 'Ventas', 'icono' => 'ShoppingCart', 'ruta' => 'ventas', 'orden' => 8],
+            ['clave' => 'pagos', 'nombre' => 'Pagos', 'icono' => 'CreditCard', 'ruta' => 'pagos', 'orden' => 9],
+            ['clave' => 'facturas', 'nombre' => 'Facturas', 'icono' => 'Receipt', 'ruta' => 'facturas', 'orden' => 10],
+            ['clave' => 'reportes', 'nombre' => 'Reportes', 'icono' => 'BarChart3', 'ruta' => 'reportes', 'orden' => 11],
+            ['clave' => 'estadisticas', 'nombre' => 'Estadísticas', 'icono' => 'PieChart', 'ruta' => 'estadisticas', 'orden' => 12],
+            ['clave' => 'permisos', 'nombre' => 'Matriz de Acceso', 'icono' => 'Shield', 'ruta' => 'permisos', 'orden' => 13],
+            ['clave' => 'bitacora', 'nombre' => 'Bitácora', 'icono' => 'ScrollText', 'ruta' => 'bitacora', 'orden' => 14],
         ];
         $recObj = [];
         foreach ($recursos as $r) {
@@ -45,20 +46,20 @@ class DatabaseSeeder extends Seeder
         $matriz = [
             'admin' => [
                 'usuarios' => [1, 1, 1, 1], 'catalogo' => [1, 1, 1, 1], 'almacenes' => [1, 1, 1, 1],
-                'inventario' => [1, 1, 1, 1], 'cotizaciones' => [1, 1, 1, 1], 'encomiendas' => [1, 1, 1, 0],
+                'inventario' => [1, 1, 1, 1], 'cotizaciones' => [1, 1, 1, 1], 'solicitudes' => [1, 0, 0, 0], 'encomiendas' => [1, 1, 1, 0],
                 'ventas' => [1, 1, 0, 0], 'pagos' => [1, 1, 0, 0], 'facturas' => [1, 0, 0, 0],
                 'reportes' => [1, 0, 0, 0], 'estadisticas' => [1, 0, 0, 0], 'permisos' => [1, 0, 1, 0], 'bitacora' => [1, 0, 0, 0],
             ],
-            'vendedor' => [
+            'asesor' => [
                 'usuarios' => [0, 0, 0, 0], 'catalogo' => [1, 0, 0, 0], 'almacenes' => [0, 0, 0, 0],
-                'inventario' => [1, 1, 0, 0], 'cotizaciones' => [1, 1, 1, 0], 'encomiendas' => [1, 1, 1, 0],
+                'inventario' => [1, 1, 0, 0], 'cotizaciones' => [1, 1, 1, 0], 'solicitudes' => [1, 0, 0, 0], 'encomiendas' => [1, 1, 1, 0],
                 'ventas' => [1, 1, 0, 0], 'pagos' => [1, 1, 0, 0], 'facturas' => [1, 0, 0, 0],
                 'reportes' => [1, 0, 0, 0], 'estadisticas' => [0, 0, 0, 0], 'permisos' => [0, 0, 0, 0], 'bitacora' => [0, 0, 0, 0],
             ],
             'cliente' => [
                 'usuarios' => [0, 0, 0, 0], 'catalogo' => [0, 0, 0, 0], 'almacenes' => [0, 0, 0, 0],
-                'inventario' => [0, 0, 0, 0], 'cotizaciones' => [1, 0, 0, 0], 'encomiendas' => [1, 0, 0, 0],
-                'ventas' => [0, 0, 0, 0], 'pagos' => [1, 1, 0, 0], 'facturas' => [1, 0, 0, 0],
+                'inventario' => [0, 0, 0, 0], 'cotizaciones' => [1, 1, 0, 0], 'solicitudes' => [0, 0, 0, 0], 'encomiendas' => [1, 0, 0, 0],
+                'ventas' => [1, 1, 0, 0], 'pagos' => [1, 1, 0, 0], 'facturas' => [1, 0, 0, 0],
                 'reportes' => [0, 0, 0, 0], 'estadisticas' => [0, 0, 0, 0], 'permisos' => [0, 0, 0, 0], 'bitacora' => [0, 0, 0, 0],
             ],
         ];
@@ -76,9 +77,9 @@ class DatabaseSeeder extends Seeder
             'ci' => '1000001', 'nombre' => 'Ana', 'apellido' => 'Admin',
             'contrasena' => Hash::make('password'), 'rol' => 'admin', 'telefono' => '70000001',
         ]);
-        $vendedor = Usuario::updateOrCreate(['correo' => 'vendedor@servicargo.bo'], [
-            'ci' => '1000002', 'nombre' => 'Victor', 'apellido' => 'Vendedor',
-            'contrasena' => Hash::make('password'), 'rol' => 'vendedor', 'telefono' => '70000002',
+        $asesor = Usuario::updateOrCreate(['correo' => 'asesor@servicargo.bo'], [
+            'ci' => '1000002', 'nombre' => 'Victor', 'apellido' => 'Asesor',
+            'contrasena' => Hash::make('password'), 'rol' => 'asesor', 'telefono' => '70000002',
         ]);
         $cliente = Usuario::updateOrCreate(['correo' => 'cliente@servicargo.bo'], [
             'ci' => '1000003', 'nombre' => 'Carla', 'apellido' => 'Cliente',
@@ -104,7 +105,7 @@ class DatabaseSeeder extends Seeder
 
         /* ---------- Almacenes + inventario ---------- */
         $alm1 = Almacen::updateOrCreate(['nombre' => 'Almacén Central SCZ'], [
-            'direccion' => 'Av. Cristo Redentor 4to anillo', 'capacidad' => 1000, 'responsable_id' => $vendedor->id,
+            'direccion' => 'Av. Cristo Redentor 4to anillo', 'capacidad' => 1000, 'responsable_id' => $asesor->id,
         ]);
         $alm2 = Almacen::updateOrCreate(['nombre' => 'Almacén La Paz'], [
             'direccion' => 'El Alto, zona industrial', 'capacidad' => 600, 'responsable_id' => $admin->id,
@@ -116,7 +117,7 @@ class DatabaseSeeder extends Seeder
         /* ---------- Cotización demo (PENDIENTE) ---------- */
         if (! Cotizacion::where('cliente_id', $cliente->id)->exists()) {
             $cot = Cotizacion::create([
-                'cliente_id' => $cliente->id, 'vendedor_id' => $vendedor->id, 'estado' => 'PENDIENTE',
+                'cliente_id' => $cliente->id, 'vendedor_id' => $asesor->id, 'estado' => 'PENDIENTE',
                 'fecha_emision' => now(), 'remitente' => 'Carla Cliente', 'destinatario' => 'Juan Perez',
                 'contenido' => 'Documentos', 'origen' => 'Santa Cruz', 'destino' => 'La Paz',
                 'tipo_envio' => 'terrestre', 'peso_kg' => 3.5, 'volumen_m3' => 0.02,
@@ -135,7 +136,7 @@ class DatabaseSeeder extends Seeder
             ['tipo' => 'QR', 'referencia' => 'qr-carla', 'activo' => true]
         );
         MetodoPago::firstOrCreate(
-            ['usuario_id' => $vendedor->id, 'alias' => 'Caja efectivo sucursal'],
+            ['usuario_id' => $asesor->id, 'alias' => 'Caja efectivo sucursal'],
             ['tipo' => 'EFECTIVO', 'referencia' => 'caja-1', 'activo' => true]
         );
 

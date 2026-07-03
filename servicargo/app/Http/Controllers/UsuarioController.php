@@ -8,7 +8,7 @@ use Illuminate\Validation\Rule;
 
 class UsuarioController extends Controller
 {
-    private array $rolesValidos = ['admin', 'vendedor', 'cliente'];
+    private array $rolesValidos = ['admin', 'asesor', 'cliente'];
 
     public function __construct(private UsuarioService $usuarios) {}
 

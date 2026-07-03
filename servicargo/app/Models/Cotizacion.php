@@ -29,6 +29,7 @@ class Cotizacion extends Model
     public function vendedor()   { return $this->belongsTo(Usuario::class, 'vendedor_id'); }
     public function detalles()   { return $this->hasMany(DetalleCotizacion::class, 'cotizacion_id'); }
     public function encomienda() { return $this->hasOne(Encomienda::class, 'cotizacion_id'); }
+    public function fotos()      { return $this->hasMany(CotizacionFoto::class, 'cotizacion_id'); }
 
     public function estaVencida(): bool
     {

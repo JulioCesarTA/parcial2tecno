@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Servicios\Comercial\PagoService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -14,6 +15,19 @@ class PagoController extends Controller
     public function index(Request $request)
     {
         return response()->json($this->pagos->listarPara($request->user()));
+    }
+
+    public function historialPdf(Request $request)
+    {
+        $datos = $this->pagos->historialPara($request->user());
+
+        $pdf = Pdf::loadView('reportes.historial-pagos', [
+            'datos' => $datos,
+            'actor' => $request->user(),
+            'fecha' => now()->format('d/m/Y H:i'),
+        ]);
+
+        return $pdf->download('historial-pagos.pdf');
     }
 
     public function registrar(Request $request)

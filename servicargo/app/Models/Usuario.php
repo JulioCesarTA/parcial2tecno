@@ -38,14 +38,14 @@ class Usuario extends Authenticatable
         $r = strtolower(trim($rol));
         return match ($r) {
             'admin', 'administrador', 'propietario' => 'admin',
-            'vendedor', 'operador' => 'vendedor',
+            'asesor', 'vendedor', 'operador' => 'asesor',
             'cliente' => 'cliente',
             default => $r,
         };
     }
 
     public function esAdmin(): bool   { return $this->rol === 'admin'; }
-    public function esVendedor(): bool { return $this->rol === 'vendedor'; }
+    public function esAsesor(): bool  { return $this->rol === 'asesor'; }
     public function esCliente(): bool  { return $this->rol === 'cliente'; }
 
     public function cotizacionesComoCliente()

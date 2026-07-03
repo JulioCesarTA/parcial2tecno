@@ -1,7 +1,7 @@
-# Subir este archivo DENTRO de app-servicargo/ y renombrarlo a ".htaccess"
+# Subir este archivo DENTRO de servicargo/ y renombrarlo a ".htaccess"
 # (sin la extensión .txt). Bloquea el acceso web directo a todo lo que hay
 # ahí adentro: .env, vendor/, app/, storage/, etc. Sin esto, cualquiera que
-# entre a la URL .../proyecto2/app-servicargo/ podría ver o descargar esos
+# entre a la URL .../proyecto2/servicargo/ podría ver o descargar esos
 # archivos (incluida la contraseña de la base de datos en .env).
 <IfModule mod_authz_core.c>
     Require all denied

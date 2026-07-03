@@ -10,8 +10,10 @@ const roles = ref([]);
 const permisos = ref([]);
 
 async function cargar() {
-  const d = await api('/permisos');
-  recursos.value = d.recursos; roles.value = d.roles; permisos.value = d.permisos;
+  try {
+    const d = await api('/permisos');
+    recursos.value = d.recursos; roles.value = d.roles; permisos.value = d.permisos;
+  } catch (e) { toast.error(e.message); }
 }
 onMounted(cargar);
 

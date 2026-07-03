@@ -2,15 +2,19 @@
 import { ref, onMounted } from 'vue';
 import AppLayout from '../Plantillas/AppLayout.vue';
 import { api } from '../servicios/useApi';
+import { useToast } from '../servicios/useUI';
 
+const toast = useToast();
 const lista = ref([]);
 const filtro = ref('');
 
 async function cargar() {
-  const datos = await api('/bitacora', { params: filtro.value ? { accion: filtro.value } : {} });
-  // El único "acceso a recurso" válido es la descarga de PDF; el resto (consultas
-  // GET y duplicados antiguos del middleware) se ocultan de la vista.
-  lista.value = datos.filter((b) => !(b.accion === 'acceso_recurso' && detalleTexto(b) !== 'Descargar PDF'));
+  try {
+    const datos = await api('/bitacora', { params: filtro.value ? { accion: filtro.value } : {} });
+    // El único "acceso a recurso" válido es la descarga de PDF; el resto (consultas
+    // GET y duplicados antiguos del middleware) se ocultan de la vista.
+    lista.value = datos.filter((b) => !(b.accion === 'acceso_recurso' && detalleTexto(b) !== 'Descargar PDF'));
+  } catch (e) { toast.error(e.message); }
 }
 onMounted(cargar);
 

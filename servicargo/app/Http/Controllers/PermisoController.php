@@ -19,7 +19,7 @@ class PermisoController extends Controller
     public function update(Request $request)
     {
         $datos = $request->validate([
-            'rol' => ['required', 'in:admin,vendedor,cliente'],
+            'rol' => ['required', 'in:admin,asesor,cliente'],
             'recurso_id' => ['required', 'integer', 'exists:recurso,id'],
             'ver' => ['required', 'boolean'],
             'crear' => ['required', 'boolean'],

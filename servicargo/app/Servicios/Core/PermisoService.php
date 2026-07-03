@@ -16,7 +16,7 @@ class PermisoService
     {
         return [
             'recursos' => Recurso::orderBy('orden')->get(),
-            'roles' => ['admin', 'vendedor', 'cliente'],
+            'roles' => ['admin', 'asesor', 'cliente'],
             'permisos' => Permiso::all(),
         ];
     }

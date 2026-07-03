@@ -48,7 +48,7 @@ async function entrar() {
         ¿No tienes cuenta? <Link :href="withBase('/registro')">Crear cuenta</Link>
       </p>
       <p style="text-align:center; font-size:12px; color:var(--color-texto-suave)">
-        Demo: admin@ / vendedor@ / cliente@servicargo.bo · contraseña <strong>password</strong>
+        Demo: admin@ / asesor@ / cliente@servicargo.bo · contraseña <strong>password</strong>
       </p>
     </div>
     <ToastHost />

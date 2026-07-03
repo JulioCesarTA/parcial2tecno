@@ -44,4 +44,23 @@ class VentaController extends Controller
             'numero_cuotas' => $venta->numero_cuotas,
         ], 201);
     }
+
+    // El cliente pide su propia nota de venta sobre una encomienda ya suya.
+    public function solicitar(Request $request)
+    {
+        $datos = $request->validate([
+            'encomienda_id' => ['required', 'integer', 'exists:encomienda,id'],
+            'tipo_pago' => ['required', Rule::in(['CONTADO', 'CREDITO'])],
+            'numero_cuotas' => ['nullable', 'integer'],
+        ]);
+
+        $venta = $this->ventas->solicitar($datos, $request->user());
+
+        return response()->json([
+            'message' => 'Nota de venta creada. Ya podés pagarla cuando quieras.',
+            'id' => $venta->id,
+            'codigo' => $venta->codigo,
+            'total_final' => $venta->total_final,
+        ], 201);
+    }
 }

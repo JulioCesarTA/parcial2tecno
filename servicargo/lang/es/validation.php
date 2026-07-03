@@ -45,7 +45,7 @@ return [
         'categoria_id' => 'categoría',
         'codigo' => 'código',
         'cliente_id' => 'cliente',
-        'vendedor_id' => 'vendedor',
+        'vendedor_id' => 'asesor',
         'validez_dias' => 'validez en días',
         'peso_kg' => 'peso',
         'volumen_m3' => 'volumen',

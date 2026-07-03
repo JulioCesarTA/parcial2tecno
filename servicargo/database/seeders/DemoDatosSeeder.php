@@ -30,10 +30,10 @@ class DemoDatosSeeder extends Seeder
         }
 
         $cliente = Usuario::where('correo', 'cliente@servicargo.bo')->first();
-        $vendedor = Usuario::where('correo', 'vendedor@servicargo.bo')->first();
+        $asesor = Usuario::where('correo', 'asesor@servicargo.bo')->first();
         $producto = Producto::first();
 
-        if (! $cliente || ! $vendedor || ! $producto) {
+        if (! $cliente || ! $asesor || ! $producto) {
             $this->command?->warn('Faltan usuarios/producto base; corre primero DatabaseSeeder.');
 
             return;
@@ -64,7 +64,7 @@ class DemoDatosSeeder extends Seeder
             // 1) Cotización
             $cot = Cotizacion::create([
                 'cliente_id' => $cliente->id,
-                'vendedor_id' => $vendedor->id,
+                'vendedor_id' => $asesor->id,
                 'estado' => $cotEstados[$i % count($cotEstados)],
                 'fecha_emision' => $fecha,
                 'remitente' => 'Carla Cliente',
@@ -117,7 +117,7 @@ class DemoDatosSeeder extends Seeder
             $venta = Venta::create([
                 'codigo' => sprintf('DEMO-V-%03d', $i),
                 'cliente_id' => $cliente->id,
-                'vendedor_id' => $vendedor->id,
+                'vendedor_id' => $asesor->id,
                 'encomienda_id' => $enc->id,
                 'estado' => $estadoVenta,
                 'fecha_venta' => $fecha,

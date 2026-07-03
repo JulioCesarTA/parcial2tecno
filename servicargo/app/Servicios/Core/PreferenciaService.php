@@ -11,7 +11,7 @@ use App\Models\Usuario;
  */
 class PreferenciaService
 {
-    private array $defaults = ['tema' => 'auto', 'fuente' => 'md', 'contraste' => 'normal'];
+    private array $defaults = ['tema' => 'navy:auto', 'fuente' => 'md', 'contraste' => 'normal'];
 
     /** Devuelve las preferencias del usuario (o los valores por defecto si no tiene). */
     public function obtenerDe(Usuario $actor): array

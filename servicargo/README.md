@@ -85,7 +85,7 @@ volver a migrar salvo que agregues una migración nueva.
 | Rol | Correo |
 |-----|--------|
 | Administrador | admin@servicargo.bo |
-| Vendedor | vendedor@servicargo.bo |
+| Asesor | asesor@servicargo.bo |
 | Cliente | cliente@servicargo.bo |
 
 ---

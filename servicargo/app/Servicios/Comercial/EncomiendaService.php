@@ -55,13 +55,13 @@ class EncomiendaService
             throw new ErrorDominio('La cotización debe estar APROBADA.', 422);
         }
 
-        // Ventana de asignación de 20 minutos: reservada al vendedor que atendió
+        // Ventana de asignación de 20 minutos: reservada al asesor que atendió
         if ($cot->fecha_aprobacion && ! $actor->esAdmin() && $actor->id !== $cot->vendedor_id) {
             $minutos = $cot->fecha_aprobacion->diffInMinutes(now());
             if ($minutos < self::VENTANA_MIN) {
                 $faltan = self::VENTANA_MIN - $minutos;
                 throw new ErrorDominio(
-                    "Encomienda reservada al vendedor que atendió la cotización. Faltan {$faltan} min.",
+                    "Encomienda reservada al asesor que atendió la cotización. Faltan {$faltan} min.",
                     423
                 );
             }
